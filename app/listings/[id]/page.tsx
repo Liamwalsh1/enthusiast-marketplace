@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { supabase } from "../../lib/supabaseClient";
 
 type Listing = {
   id: string;
@@ -27,10 +26,38 @@ function isUuid(v: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
 }
 
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+async function getListing(id: string): Promise<Listing | null> {
+  const url = new URL("/rest/v1/listings", SUPABASE_URL);
+  url.searchParams.set(
+    "select",
+    "id,title,category,price_eur,location,condition,description,created_at"
+  );
+  url.searchParams.set("id", `eq.${id}`);
+
+  const res = await fetch(url.toString(), {
+    headers: {
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      Accept: "application/json",
+    },
+    cache: "no-store",
+  });
+
+  if (!res.ok) return null;
+
+  const rows = (await res.json()) as Listing[];
+  return rows[0] ?? null;
+}
+
 export const dynamic = "force-dynamic";
 
-export default async function ListingDetailPage({ params }: { params: { id: string } }) {
-  const id = params.id;
+export default async function ListingDetailPage({
+  params,
+}: PageProps<"/listings/[id]">) {
+  const { id } = await params;
 
   if (!isUuid(id)) {
     return (
@@ -44,13 +71,9 @@ export default async function ListingDetailPage({ params }: { params: { id: stri
     );
   }
 
-  const { data, error } = await supabase
-    .from("listings")
-    .select("id,title,category,price_eur,location,condition,description,created_at")
-    .eq("id", id)
-    .single();
+  const listing = await getListing(id);
 
-  if (error || !data) {
+  if (!listing) {
     return (
       <main className="container">
         <Link className="pill" href="/browse">← Back to Browse</Link>
@@ -63,8 +86,6 @@ export default async function ListingDetailPage({ params }: { params: { id: stri
       </main>
     );
   }
-
-  const listing = data as Listing;
 
   return (
     <main className="container">
