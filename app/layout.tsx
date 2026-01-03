@@ -3,7 +3,7 @@ import SiteHeader from "./SiteHeader";
 import SiteFooter from "./SiteFooter";
 
 export const metadata = {
-  title: "Enthusiast Marketplace",
+  title: "Passion Driven",
   description: "Cars, parts, and memorabilia for enthusiasts.",
 };
 

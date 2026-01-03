@@ -12,7 +12,7 @@ export default function SiteHeader() {
         <Link href="/" style={styles.brand}>
           <span style={styles.logo}>EM</span>
           <span>
-            <div style={styles.title}>Enthusiast Marketplace</div>
+            <div style={styles.title}>Passion Driven</div>
             <div style={styles.subtitle}>Cars • Parts • Memorabilia</div>
           </span>
         </Link>

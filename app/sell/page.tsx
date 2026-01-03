@@ -11,37 +11,57 @@ export default function SellPage() {
 
   const [category, setCategory] = useState<Category>("car");
   const [title, setTitle] = useState("");
-  const [priceEur, setPriceEur] = useState<string>("");
+  const [priceEur, setPriceEur] = useState("");
   const [location, setLocation] = useState("");
   const [condition, setCondition] = useState("Used");
   const [description, setDescription] = useState("");
+  const [files, setFiles] = useState<File[]>([]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
-  function parsePriceToInt(value: string): number | null {
-    // allow "12,345" or "12345"
+  function parsePrice(value: string): number | null {
     const cleaned = value.replace(/,/g, "").trim();
-    if (cleaned === "") return null;
+    if (!cleaned) return null;
     const n = Number(cleaned);
-    if (!Number.isFinite(n)) return null;
-    return Math.round(n);
+    return Number.isFinite(n) ? Math.round(n) : null;
+  }
+
+  async function uploadImages(listingId: string, filesToUpload: File[]) {
+    const urls: string[] = [];
+
+    for (const file of filesToUpload) {
+      const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+      const path = `${listingId}/${crypto.randomUUID()}.${ext}`;
+
+      const { error } = await supabase.storage
+        .from("listings-images")
+        .upload(path, file, { contentType: file.type });
+
+      if (error) {
+        console.error("Image upload failed:", error);
+        throw error;
+      }
+
+      const { data } = supabase.storage.from("listings-images").getPublicUrl(path);
+      urls.push(data.publicUrl);
+    }
+
+    return urls;
   }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setErrorMsg(null);
-    setSuccessMsg(null);
 
     if (title.trim().length < 6) {
-      setErrorMsg("Title is too short (try at least 6 characters).");
+      setErrorMsg("Title must be at least 6 characters.");
       return;
     }
 
-    const priceInt = parsePriceToInt(priceEur);
+    const priceInt = parsePrice(priceEur);
     if (priceEur.trim() !== "" && priceInt === null) {
-      setErrorMsg("Price must be a number (e.g. 15000).");
+      setErrorMsg("Price must be a valid number.");
       return;
     }
 
@@ -60,33 +80,37 @@ export default function SellPage() {
       .select("id")
       .single();
 
-    setIsSubmitting(false);
-
-    if (error) {
-      setErrorMsg(error.message);
+    if (error || !data?.id) {
+      setIsSubmitting(false);
+      setErrorMsg(error?.message ?? "Failed to create listing.");
       return;
     }
 
-    setSuccessMsg("Listing posted! Redirecting to Browse…");
+    try {
+      if (files.length > 0) {
+        const imageUrls = await uploadImages(data.id, files.slice(0, 5));
 
-    // Option A: go to browse (simple)
-    setTimeout(() => router.push("/browse"), 500);
+        const { error: updateErr } = await supabase
+          .from("listings")
+          .update({ image_urls: imageUrls })
+          .eq("id", data.id);
 
-    // Option B (later): go straight to the listing detail
-    // if (data?.id) router.push(`/listings/${data.id}`);
+        if (updateErr) throw updateErr;
+      }
+
+      router.push(`/listings/${data.id}`);
+    } catch (err: any) {
+      setIsSubmitting(false);
+      setErrorMsg(err?.message ?? "Listing created, but image upload failed.");
+    }
   }
 
   return (
     <main className="container">
       <h1 style={styles.h1}>Post an ad</h1>
-      <p style={styles.p}>
-        This will create a real listing in Supabase and it will appear on Browse.
-      </p>
 
       <div className="grid-2" style={{ marginTop: 12 }}>
         <section className="card" style={styles.card}>
-          <div style={styles.sectionTitle}>Listing details</div>
-
           <form onSubmit={onSubmit}>
             <label style={styles.label}>Category</label>
             <select
@@ -99,117 +123,87 @@ export default function SellPage() {
               <option value="memorabilia">Memorabilia</option>
             </select>
 
-            <div style={styles.row}>
-              <div>
-                <label style={styles.label}>Title</label>
-                <input
-                  className="input"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="e.g. 2002 Honda S2000 AP1 (UK Import)"
-                />
-              </div>
-              <div>
-                <label style={styles.label}>Price (EUR)</label>
-                <input
-                  className="input"
-                  value={priceEur}
-                  onChange={(e) => setPriceEur(e.target.value)}
-                  placeholder="e.g. 29500"
-                  inputMode="numeric"
-                />
-              </div>
-            </div>
+            <label style={styles.label}>Title</label>
+            <input
+              className="input"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g. 2002 Honda S2000 AP1"
+            />
 
-            <div style={styles.row}>
-              <div>
-                <label style={styles.label}>Location</label>
-                <input
-                  className="input"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  placeholder="e.g. Dublin"
-                />
-              </div>
-              <div>
-                <label style={styles.label}>Condition</label>
-                <select
-                  className="select"
-                  value={condition}
-                  onChange={(e) => setCondition(e.target.value)}
-                >
-                  <option>New</option>
-                  <option>Used</option>
-                  <option>Refurbished</option>
-                </select>
-              </div>
-            </div>
+            <label style={styles.label}>Price (EUR)</label>
+            <input
+              className="input"
+              value={priceEur}
+              onChange={(e) => setPriceEur(e.target.value)}
+              inputMode="numeric"
+              placeholder="e.g. 29500"
+            />
+
+            <label style={styles.label}>Location</label>
+            <input
+              className="input"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="e.g. Dublin"
+            />
+
+            <label style={styles.label}>Condition</label>
+            <select
+              className="select"
+              value={condition}
+              onChange={(e) => setCondition(e.target.value)}
+            >
+              <option>New</option>
+              <option>Used</option>
+              <option>Refurbished</option>
+            </select>
 
             <label style={styles.label}>Description</label>
             <textarea
               className="textarea"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Add the details enthusiasts care about: spec, history, condition, extras…"
+              placeholder="Spec, history, condition, extras…"
             />
 
-            {errorMsg ? (
-              <div style={styles.errorBox} className="card">
-                <div style={{ fontWeight: 950 }}>Couldn’t post listing</div>
-                <div style={{ marginTop: 6 }}>{errorMsg}</div>
-              </div>
-            ) : null}
+            <label style={styles.label}>Photos (up to 5)</label>
+            <input
+              className="input"
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
+            />
 
-            {successMsg ? (
-              <div style={styles.successBox} className="card">
-                <div style={{ fontWeight: 950 }}>Success</div>
-                <div style={{ marginTop: 6 }}>{successMsg}</div>
-              </div>
-            ) : null}
+            {files.length > 0 && (
+              <div style={styles.smallText}>{files.length} photo(s) selected</div>
+            )}
 
-            <div style={styles.actions}>
-              <button className="btn btn-primary" type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Posting…" : "Post ad"}
-              </button>
-              <button
-                className="btn btn-secondary"
-                type="button"
-                onClick={() => {
-                  setTitle("");
-                  setPriceEur("");
-                  setLocation("");
-                  setCondition("Used");
-                  setDescription("");
-                  setErrorMsg(null);
-                  setSuccessMsg(null);
-                }}
-                disabled={isSubmitting}
-              >
-                Clear
-              </button>
-            </div>
+            {errorMsg && (
+              <div className="card" style={styles.errorBox}>
+                {errorMsg}
+              </div>
+            )}
+
+            <button
+              className="btn btn-primary"
+              type="submit"
+              disabled={isSubmitting}
+              style={{ marginTop: 12 }}
+            >
+              {isSubmitting ? "Posting…" : "Post ad"}
+            </button>
           </form>
         </section>
 
         <aside className="card" style={styles.card}>
-          <div style={styles.sectionTitle}>Photos (next step)</div>
-          <p style={styles.smallText}>
-            Next we’ll add Supabase Storage so you can upload images and show them on the listing page.
-          </p>
-
-          <div style={styles.uploadBox}>
-            <div style={{ fontWeight: 850, color: "var(--green-900)" }}>Upload photos</div>
-            <div style={styles.smallText}>Drag & drop or click (coming next)</div>
-          </div>
-
-          <div style={{ marginTop: 14 }}>
-            <div style={styles.sectionTitle}>Posting tips</div>
-            <ul style={styles.ul}>
-              <li>Use a clean title with year + model</li>
-              <li>Be honest about faults (trust wins)</li>
-              <li>Add provenance: service history / receipts</li>
-            </ul>
-          </div>
+          <div style={{ fontWeight: 900, color: "var(--green-900)" }}>Tips</div>
+          <ul style={styles.ul}>
+            <li>Clear photos sell faster</li>
+            <li>Show flaws honestly</li>
+            <li>Add provenance if possible</li>
+          </ul>
         </aside>
       </div>
     </main>
@@ -217,36 +211,15 @@ export default function SellPage() {
 }
 
 const styles: Record<string, React.CSSProperties> = {
-  h1: { margin: 0, fontSize: 34, fontWeight: 950, color: "var(--green-900)" },
-  p: { margin: "6px 0 0", color: "var(--muted)", fontWeight: 650, maxWidth: 780 },
+  h1: { fontSize: 34, fontWeight: 950, color: "var(--green-900)" },
   card: { padding: 16 },
-  sectionTitle: { fontWeight: 950, color: "var(--green-900)", marginBottom: 10 },
-  label: { display: "block", marginTop: 10, marginBottom: 6, fontWeight: 800, color: "var(--green-900)" },
-  row: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 10 },
-  actions: { display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 },
-  uploadBox: {
-    marginTop: 6,
-    borderRadius: 16,
-    border: "1px dashed var(--border)",
-    background: "var(--soft)",
-    padding: 16,
-  },
+  label: { marginTop: 10, fontWeight: 800, display: "block", color: "var(--green-900)" },
   smallText: { color: "var(--muted)", fontWeight: 650, fontSize: 13, marginTop: 6 },
-  ul: { margin: 10, paddingLeft: 18, color: "var(--muted)", fontWeight: 650 },
+  ul: { marginTop: 10, paddingLeft: 18, color: "var(--muted)", fontWeight: 650 },
   errorBox: {
     marginTop: 12,
     padding: 12,
-    border: "1px solid rgba(220, 38, 38, 0.25)",
-    background: "rgba(220, 38, 38, 0.06)",
-    color: "var(--text)",
-    boxShadow: "none",
-  },
-  successBox: {
-    marginTop: 12,
-    padding: 12,
-    border: "1px solid rgba(20, 80, 44, 0.25)",
-    background: "rgba(20, 80, 44, 0.06)",
-    color: "var(--text)",
-    boxShadow: "none",
+    border: "1px solid rgba(220,38,38,.3)",
+    background: "rgba(220,38,38,.08)",
   },
 };
