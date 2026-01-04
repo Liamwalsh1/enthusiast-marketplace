@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 export default function ImageCarousel({
   title,
@@ -14,10 +14,7 @@ export default function ImageCarousel({
   const safeUrls = useMemo(() => (Array.isArray(urls) ? urls.filter(Boolean) : []), [urls]);
   const [index, setIndex] = useState(0);
 
-  // Keep index valid if urls change
-  useEffect(() => {
-    if (index > safeUrls.length - 1) setIndex(0);
-  }, [safeUrls.length, index]);
+  const displayIndex = safeUrls.length ? Math.min(index, safeUrls.length - 1) : 0;
 
   const startX = useRef<number | null>(null);
   const deltaX = useRef<number>(0);
@@ -106,8 +103,8 @@ export default function ImageCarousel({
         onPointerLeave={onPointerUp}
       >
         <img
-            src={safeUrls[index]}
-            alt={`${title} photo ${index + 1}`}
+            src={safeUrls[displayIndex]}
+            alt={`${title} photo ${displayIndex + 1}`}
             loading="eager"
             decoding="async"
             style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
@@ -156,7 +153,7 @@ export default function ImageCarousel({
                     height: 8,
                     borderRadius: 999,
                     border: "1px solid rgba(255,255,255,0.65)",
-                    background: i === index ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.35)",
+                    background: i === displayIndex ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.35)",
                     cursor: "pointer",
                   }}
                 />
@@ -168,7 +165,7 @@ export default function ImageCarousel({
 
       {canGo ? (
         <div style={{ marginTop: 8, color: "var(--muted)", fontWeight: 650, fontSize: 13 }}>
-          {index + 1} / {safeUrls.length} (swipe or use arrows)
+          {displayIndex + 1} / {safeUrls.length} (swipe or use arrows)
         </div>
       ) : null}
     </div>

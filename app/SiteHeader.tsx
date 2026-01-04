@@ -1,11 +1,21 @@
 import Link from "next/link";
+import type { CSSProperties } from "react";
+import { createServerSupabaseClient } from "./lib/supabase/server";
+import AuthStatus from "./components/AuthStatus";
+
+export const dynamic = "force-dynamic";
 
 const nav = [
   { href: "/browse", label: "Browse" },
   { href: "/sell", label: "Sell" },
 ];
 
-export default function SiteHeader() {
+export default async function SiteHeader() {
+  const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   return (
     <header style={styles.wrap}>
       <div className="container" style={styles.inner}>
@@ -23,16 +33,14 @@ export default function SiteHeader() {
               {i.label}
             </Link>
           ))}
-          <Link className="btn btn-secondary" href="/signin">
-            Sign in
-          </Link>
+          <AuthStatus initialUserEmail={user?.email ?? null} />
         </nav>
       </div>
     </header>
   );
 }
 
-const styles: Record<string, React.CSSProperties> = {
+const styles: Record<string, CSSProperties> = {
   wrap: {
     position: "sticky",
     top: 0,

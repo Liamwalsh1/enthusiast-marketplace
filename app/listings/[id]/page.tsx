@@ -1,8 +1,6 @@
 import Link from "next/link";
 import ImageCarousel from "@/app/components/ImageCarousel";
-
-
-
+import MessageSellerCard from "@/app/components/MessageSellerCard";
 
 type Listing = {
   id: string;
@@ -14,64 +12,22 @@ type Listing = {
   description: string | null;
   created_at: string;
   image_urls?: string[] | null;
+  owner_id: string | null;
 };
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-function ImageGallery({ title, urls }: { title: string; urls: string[] }) {
-  return (
-    <div>
-      <img
-        src={urls[0]}
-        alt={title}
-        style={{
-          width: "100%",
-          height: 280,
-          objectFit: "cover",
-          borderRadius: 18,
-          border: "1px solid var(--border)",
-        }}
-      />
-
-      {urls.length > 1 ? (
-        <div
-          style={{
-            display: "flex",
-            gap: 10,
-            marginTop: 10,
-            overflowX: "auto",
-            paddingBottom: 6,
-            WebkitOverflowScrolling: "touch",
-          }}
-        >
-          {urls.map((u, i) => (
-            <a
-              key={u}
-              href={u}
-              target="_blank"
-              rel="noreferrer"
-              style={{ display: "block", flex: "0 0 auto" }}
-              aria-label={`Open photo ${i + 1}`}
-            >
-              <img
-                src={u}
-                alt={`${title} photo ${i + 1}`}
-                style={{
-                  width: 96,
-                  height: 72,
-                  objectFit: "cover",
-                  borderRadius: 12,
-                  border: "1px solid var(--border)",
-                }}
-              />
-            </a>
-          ))}
-        </div>
-      ) : null}
-    </div>
-  );
-}
+type ListingError =
+  | {
+      kind: "missing-env";
+      missing: string[];
+    }
+  | {
+      kind: "fetch";
+      status: number;
+      detail: string;
+    };
 
 function formatPrice(price: number | null) {
   if (price === null || Number.isNaN(price)) return "€—";
@@ -84,51 +40,63 @@ function labelCategory(cat: Listing["category"]) {
   return "Memorabilia";
 }
 
-async function getListing(id: string): Promise<Listing | null> {
-  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-    console.log("Missing env vars:", {
-      hasUrl: !!SUPABASE_URL,
-      hasKey: !!SUPABASE_ANON_KEY,
-    });
-    return null;
+async function getListing(
+  id: string
+): Promise<{
+  listing: Listing | null;
+  error: ListingError | null;
+}> {
+  const missing: string[] = [];
+  if (!SUPABASE_URL) missing.push("NEXT_PUBLIC_SUPABASE_URL");
+  if (!SUPABASE_ANON_KEY) missing.push("NEXT_PUBLIC_SUPABASE_ANON_KEY");
+
+  if (missing.length > 0) {
+    console.error("Listing fetch aborted. Missing env vars:", missing);
+    return { listing: null, error: { kind: "missing-env", missing } };
   }
 
+  const supabaseUrl = SUPABASE_URL!;
+  const supabaseAnonKey = SUPABASE_ANON_KEY!;
 
-  const url = new URL("/rest/v1/listings", SUPABASE_URL);
+  const url = new URL("/rest/v1/listings", supabaseUrl);
   url.searchParams.set(
     "select",
-    "id,title,category,price_eur,location,condition,description,created_at,image_urls"
+    "id,title,category,price_eur,location,condition,description,created_at,image_urls,owner_id"
   );
   url.searchParams.set("id", `eq.${id}`);
 
   const res = await fetch(url.toString(), {
     headers: {
-      apikey: SUPABASE_ANON_KEY,
-      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      apikey: supabaseAnonKey,
+      Authorization: `Bearer ${supabaseAnonKey}`,
       Accept: "application/json",
       "Accept-Profile": "public",
     },
     cache: "no-store",
   });
+
   if (!res.ok) {
-  const text = await res.text();
-  console.log("Supabase fetch failed:", res.status, text);
-  return null;
-}
+    const text = await res.text();
+    console.error("Supabase fetch failed:", res.status, text);
+    return { listing: null, error: { kind: "fetch", status: res.status, detail: text || "Unknown error" } };
+  }
 
-
-  if (!res.ok) return null;
   const rows = (await res.json()) as Listing[];
-  return rows[0] ?? null;
+  return { listing: rows[0] ?? null, error: null };
 }
 
 export default async function ListingDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const listing = await getListing(id);
+  const { listing, error: listingError } = await getListing(id);
+  const isMissingEnv = listingError?.kind === "missing-env";
+  const isFetchError = listingError?.kind === "fetch";
+  const missingEnvList = listingError?.kind === "missing-env" ? listingError.missing : [];
+  const fetchDetail = listingError?.kind === "fetch" ? listingError.detail : null;
+  const devDetail = process.env.NODE_ENV !== "production" ? fetchDetail : null;
 
   return (
     <main className="container">
@@ -139,11 +107,30 @@ export default async function ListingDetailPage({
       {!listing ? (
         <section className="card" style={{ padding: 16, marginTop: 12 }}>
           <div style={{ fontWeight: 950, color: "var(--green-900)" }}>
-            Listing not found
+            {isMissingEnv ? "Configuration issue" : isFetchError ? "Unable to load listing" : "Listing not found"}
           </div>
           <div style={{ color: "var(--muted)", fontWeight: 650 }}>
-            This listing may have been removed (or env vars are missing).
+            {isMissingEnv
+              ? `Missing Supabase env vars: ${missingEnvList.join(", ")}`
+              : isFetchError
+              ? "Supabase returned an error while fetching this listing."
+              : "This listing may have been removed."}
           </div>
+          {devDetail ? (
+            <pre
+              style={{
+                marginTop: 10,
+                padding: 10,
+                borderRadius: 12,
+                background: "var(--soft)",
+                border: "1px solid var(--border)",
+                whiteSpace: "pre-wrap",
+                fontSize: 13,
+              }}
+            >
+              {devDetail}
+            </pre>
+          ) : null}
         </section>
       ) : (
         <div className="grid-2" style={{ marginTop: 12 }}>
@@ -229,33 +216,13 @@ export default async function ListingDetailPage({
             </div>
           </section>
 
-          <aside className="card" style={{ padding: 16 }}>
-            <div
-              style={{
-                fontWeight: 950,
-                color: "var(--green-900)",
-                marginBottom: 8,
-              }}
-            >
-              Next steps
-            </div>
-            <div style={{ color: "var(--muted)", fontWeight: 650 }}>
-              Messaging comes after login.
-            </div>
-
-            <div
-              style={{
-                display: "flex",
-                gap: 10,
-                flexWrap: "wrap",
-                marginTop: 14,
-              }}
-            >
-              <button className="btn btn-primary" disabled>
-                Message seller (next)
-              </button>
+          <aside style={{ display: "grid", gap: 12, alignContent: "flex-start" }}>
+            <MessageSellerCard listingId={listing.id} listingTitle={listing.title} sellerId={listing.owner_id ?? null} />
+            <div className="card" style={{ padding: 16, display: "grid", gap: 12 }}>
+              <div style={{ fontWeight: 950, color: "var(--green-900)" }}>Keep browsing</div>
+              <div style={{ color: "var(--muted)", fontWeight: 650 }}>Find more in the marketplace.</div>
               <Link className="btn btn-secondary" href="/browse">
-                Keep browsing
+                Browse listings
               </Link>
             </div>
           </aside>

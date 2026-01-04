@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import type { User } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabaseClient";
 
 type Category = "car" | "part" | "memorabilia";
@@ -19,6 +20,48 @@ export default function SellPage() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [checkingSession, setCheckingSession] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function fetchSession() {
+      const { data, error } = await supabase.auth.getSession();
+      if (!isMounted) return;
+
+      if (error) {
+        console.error("Session lookup failed:", error);
+        setErrorMsg("Could not verify session.");
+      }
+
+      const sessionUser = data.session?.user ?? null;
+      setUser(sessionUser);
+      setCheckingSession(false);
+
+      if (!sessionUser) {
+        router.replace(`/login?next=${encodeURIComponent("/sell")}`);
+      }
+    }
+
+    fetchSession();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!isMounted) return;
+      const nextUser = session?.user ?? null;
+      setUser(nextUser);
+      if (!nextUser) {
+        router.replace(`/login?next=${encodeURIComponent("/sell")}`);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
+  }, [router]);
 
   function parsePrice(value: string): number | null {
     const cleaned = value.replace(/,/g, "").trim();
@@ -27,12 +70,12 @@ export default function SellPage() {
     return Number.isFinite(n) ? Math.round(n) : null;
   }
 
-  async function uploadImages(listingId: string, filesToUpload: File[]) {
+  async function uploadImages(listingId: string, filesToUpload: File[], ownerId: string) {
     const urls: string[] = [];
 
     for (const file of filesToUpload) {
       const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
-      const path = `${listingId}/${crypto.randomUUID()}.${ext}`;
+      const path = `${ownerId}/${listingId}/${crypto.randomUUID()}.${ext}`;
 
       const { error } = await supabase.storage
         .from("listings-images")
@@ -50,7 +93,7 @@ export default function SellPage() {
     return urls;
   }
 
-  async function onSubmit(e: React.FormEvent) {
+  async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setErrorMsg(null);
 
@@ -67,6 +110,12 @@ export default function SellPage() {
 
     setIsSubmitting(true);
 
+    if (!user) {
+      router.replace(`/login?next=${encodeURIComponent("/sell")}`);
+      setIsSubmitting(false);
+      return;
+    }
+
     const { data, error } = await supabase
       .from("listings")
       .insert({
@@ -76,6 +125,7 @@ export default function SellPage() {
         location: location.trim() || null,
         condition: condition.trim() || null,
         description: description.trim() || null,
+        owner_id: user.id,
       })
       .select("id")
       .single();
@@ -88,7 +138,7 @@ export default function SellPage() {
 
     try {
       if (files.length > 0) {
-        const imageUrls = await uploadImages(data.id, files.slice(0, 5));
+        const imageUrls = await uploadImages(data.id, files.slice(0, 5), user.id);
 
         const { error: updateErr } = await supabase
           .from("listings")
@@ -99,10 +149,27 @@ export default function SellPage() {
       }
 
       router.push(`/listings/${data.id}`);
-    } catch (err: any) {
+    } catch (err) {
       setIsSubmitting(false);
-      setErrorMsg(err?.message ?? "Listing created, but image upload failed.");
+      const message =
+        err && typeof err === "object" && "message" in err && typeof (err as { message?: string }).message === "string"
+          ? (err as { message?: string }).message ?? "Listing created, but image upload failed."
+          : "Listing created, but image upload failed.";
+      setErrorMsg(message);
     }
+  }
+
+  if (checkingSession) {
+    return (
+      <main className="container">
+        <section className="card" style={{ padding: 16, marginTop: 20 }}>
+          <div style={{ fontWeight: 900, color: "var(--green-900)" }}>Checking session…</div>
+          <div style={{ color: "var(--muted)", fontWeight: 650, marginTop: 6 }}>
+            Redirecting you to sign in if needed.
+          </div>
+        </section>
+      </main>
+    );
   }
 
   return (
