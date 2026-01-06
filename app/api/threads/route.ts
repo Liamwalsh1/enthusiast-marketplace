@@ -37,7 +37,7 @@ export async function POST(request: Request) {
 
   const { data: listing, error: listingError } = await supabase
     .from("listings")
-    .select("id, owner_id")
+    .select("id, owner_id, status")
     .eq("id", listingId)
     .single();
 
@@ -47,6 +47,10 @@ export async function POST(request: Request) {
 
   if (!listing.owner_id) {
     return NextResponse.json({ error: "Listing is missing an owner." }, { status: 400 });
+  }
+
+  if (listing.status === "sold") {
+    return NextResponse.json({ error: "This listing has been marked as sold. Messaging is disabled." }, { status: 400 });
   }
 
   if (listing.owner_id === user.id) {

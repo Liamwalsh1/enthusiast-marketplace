@@ -149,12 +149,7 @@ export default function MessageSellerCard({ listingId, listingTitle, sellerId }:
   }
 
   if (user.id === sellerId) {
-    return (
-      <div className="card" style={cardStyles.card}>
-        <div style={cardStyles.title}>You created this listing</div>
-        <p style={cardStyles.text}>Edit it from your account (coming soon).</p>
-      </div>
-    );
+    return null;
   }
 
   return (
