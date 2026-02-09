@@ -1,18 +1,26 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, useCallback } from "react";
 
 export default function ImageCarousel({
   title,
   urls,
+  blurDataUrls,
   height = 280,
 }: {
   title: string;
   urls: string[];
+  blurDataUrls?: string[];
   height?: number;
 }) {
   const safeUrls = useMemo(() => (Array.isArray(urls) ? urls.filter(Boolean) : []), [urls]);
+  const safeBlurs = useMemo(() => (Array.isArray(blurDataUrls) ? blurDataUrls : []), [blurDataUrls]);
   const [index, setIndex] = useState(0);
+  const [loadedIndices, setLoadedIndices] = useState<Set<number>>(new Set([0]));
+
+  const handleImageLoad = useCallback((idx: number) => {
+    setLoadedIndices((prev) => new Set(prev).add(idx));
+  }, []);
 
   const displayIndex = safeUrls.length ? Math.min(index, safeUrls.length - 1) : 0;
 
@@ -102,13 +110,38 @@ export default function ImageCarousel({
         onPointerCancel={onPointerUp}
         onPointerLeave={onPointerUp}
       >
+        {/* Blur placeholder */}
+        {safeBlurs[displayIndex] && !loadedIndices.has(displayIndex) && (
+          <img
+            src={safeBlurs[displayIndex]}
+            alt=""
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              filter: "blur(20px)",
+              transform: "scale(1.1)",
+            }}
+          />
+        )}
         <img
-            src={safeUrls[displayIndex]}
-            alt={`${title} photo ${displayIndex + 1}`}
-            loading="eager"
-            decoding="async"
-            style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-            draggable={false}
+          src={safeUrls[displayIndex]}
+          alt={`${title} photo ${displayIndex + 1}`}
+          loading="eager"
+          decoding="async"
+          onLoad={() => handleImageLoad(displayIndex)}
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            display: "block",
+            opacity: loadedIndices.has(displayIndex) ? 1 : 0,
+            transition: "opacity 0.3s ease",
+          }}
+          draggable={false}
         />
 
 

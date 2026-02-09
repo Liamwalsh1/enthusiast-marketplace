@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/app/lib/supabase/server";
 import MessageComposer from "@/app/components/MessageComposer";
+import MarkThreadRead from "@/app/components/MarkThreadRead";
 
 type ThreadRecord = {
   id: string;
@@ -10,6 +11,16 @@ type ThreadRecord = {
   seller_id: string;
   listings: { title: string | null } | { title: string | null }[] | null;
 };
+
+type UserProfile = {
+  user_id: string;
+  display_name: string | null;
+};
+
+function getDisplayName(profile: UserProfile | null, fallback: string): string {
+  if (profile?.display_name) return profile.display_name;
+  return fallback;
+}
 
 export default async function ThreadPage({ params }: { params: Promise<{ threadId: string }> }) {
   const { threadId } = await params;
@@ -46,7 +57,17 @@ export default async function ThreadPage({ params }: { params: Promise<{ threadI
     .order("created_at", { ascending: true });
   const messages = messageRows ?? [];
 
-  const talkingTo = threadRecord.buyer_id === user.id ? "Seller" : "Buyer";
+  // Get the other user's profile
+  const isBuyer = threadRecord.buyer_id === user.id;
+  const otherUserId = isBuyer ? threadRecord.seller_id : threadRecord.buyer_id;
+
+  const { data: otherProfile } = await supabase
+    .from("user_profiles")
+    .select("user_id, display_name")
+    .eq("user_id", otherUserId)
+    .maybeSingle();
+
+  const otherName = getDisplayName(otherProfile as UserProfile | null, isBuyer ? "seller" : "buyer");
   const listingsValue = threadRecord.listings;
   const listingTitle = Array.isArray(listingsValue)
     ? listingsValue[0]?.title ?? null
@@ -54,15 +75,54 @@ export default async function ThreadPage({ params }: { params: Promise<{ threadI
 
   return (
     <main className="container">
+      <MarkThreadRead threadId={threadId} />
       <Link className="pill" href="/messages">
         ← Back to inbox
       </Link>
       <section className="card" style={{ padding: 20, marginTop: 12, display: "grid", gap: 16 }}>
         <div>
-          <div style={{ fontWeight: 900, color: "var(--green-900)", fontSize: 28 }}>
+          <Link
+            href={`/listings/${threadRecord.listing_id}`}
+            style={{
+              fontWeight: 900,
+              color: "var(--green-900)",
+              fontSize: 28,
+              textDecoration: "none",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+            }}
+          >
             {listingTitle ?? "Conversation"}
+            <span style={{ fontSize: 14, fontWeight: 700, color: "var(--green-600)" }}>
+              View listing →
+            </span>
+          </Link>
+          <div style={{ color: "var(--muted)", fontWeight: 650, marginTop: 4 }}>
+            Chatting with{" "}
+            <Link
+              href={`/sellers/${otherUserId}`}
+              style={{
+                color: "var(--green-900)",
+                fontWeight: 800,
+                textDecoration: "none",
+              }}
+            >
+              {otherName}
+            </Link>
+            <Link
+              href={`/sellers/${otherUserId}`}
+              style={{
+                marginLeft: 8,
+                fontSize: 12,
+                fontWeight: 700,
+                color: "var(--green-600)",
+                textDecoration: "none",
+              }}
+            >
+              View profile →
+            </Link>
           </div>
-          <div style={{ color: "var(--muted)", fontWeight: 650 }}>Chatting with the {talkingTo.toLowerCase()}</div>
         </div>
         <div
           style={{

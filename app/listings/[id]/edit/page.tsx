@@ -23,7 +23,7 @@ export default async function EditListingPage({
 
   const { data: listing, error } = await supabase
     .from("listings")
-    .select("id, owner_id, title, price_eur, description, status")
+    .select("id, owner_id, title, price_eur, description, status, category, location, make, model, year, engine_cc, engine_type, transmission, mileage_km, vin, image_urls, wheel_diameter, wheel_width, bolt_pattern, wheel_offset, center_bore, wheel_quantity, wheel_brand, wheel_material, wheel_style")
     .eq("id", id)
     .maybeSingle();
 
@@ -56,9 +56,30 @@ export default async function EditListingPage({
       <section className="card" style={{ padding: 16, display: "grid", gap: 12 }}>
         <EditListingForm
           listingId={listing.id}
+          ownerId={user.id}
+          category={listing.category ?? "car"}
           initialTitle={listing.title ?? ""}
           initialPrice={listing.price_eur}
+          initialLocation={listing.location ?? ""}
           initialDescription={listing.description ?? ""}
+          initialMake={listing.make ?? ""}
+          initialModel={listing.model ?? ""}
+          initialYear={listing.year}
+          initialEngineCc={listing.engine_cc}
+          initialEngineType={listing.engine_type ?? ""}
+          initialTransmission={listing.transmission ?? ""}
+          initialMileageKm={listing.mileage_km}
+          initialVin={listing.vin ?? ""}
+          initialImageUrls={listing.image_urls ?? []}
+          initialWheelDiameter={listing.wheel_diameter}
+          initialWheelWidth={listing.wheel_width}
+          initialBoltPattern={listing.bolt_pattern ?? ""}
+          initialWheelOffset={listing.wheel_offset}
+          initialCenterBore={listing.center_bore}
+          initialWheelQuantity={listing.wheel_quantity}
+          initialWheelBrand={listing.wheel_brand ?? ""}
+          initialWheelMaterial={listing.wheel_material ?? ""}
+          initialWheelStyle={listing.wheel_style ?? ""}
         />
       </section>
     </main>

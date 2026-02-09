@@ -36,7 +36,7 @@ export async function POST(request: Request) {
 
   const { data: thread, error: threadError } = await supabase
     .from("threads")
-    .select("id, listing_id, buyer_id, seller_id, listings ( status )")
+    .select("id, listing_id, buyer_id, seller_id")
     .eq("id", threadId)
     .maybeSingle();
 
@@ -49,10 +49,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "You are not part of this conversation." }, { status: 403 });
   }
 
-  const listingsData = (thread as { listings?: { status?: string | null } | { status?: string | null }[] | null }).listings;
-  const listingStatus = Array.isArray(listingsData) ? listingsData[0]?.status : listingsData?.status;
-  if (listingStatus === "sold") {
-    return NextResponse.json({ error: "This listing has been marked as sold. Messaging is disabled." }, { status: 400 });
+  if (thread.listing_id) {
+    const { data: listing } = await supabase
+      .from("listings")
+      .select("status")
+      .eq("id", thread.listing_id)
+      .maybeSingle();
+
+    if (listing?.status === "sold") {
+      return NextResponse.json(
+        { error: "This listing has been marked as sold. Messaging is disabled." },
+        { status: 400 }
+      );
+    }
   }
 
   const trimmedBody = messageBody.slice(0, 2000);

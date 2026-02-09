@@ -17,14 +17,19 @@ export async function createServerSupabaseClient() {
         getAll() {
           return cookieStore.getAll();
         },
-        setAll(cookies) {
-          for (const cookie of cookies) {
-            cookieStore.set({
-              name: cookie.name,
-              value: cookie.value,
-              ...(cookie.options ?? {}),
-              path: cookie.options?.path ?? "/",
-            });
+        setAll(cookiesToSet) {
+          try {
+            for (const cookie of cookiesToSet) {
+              cookieStore.set({
+                name: cookie.name,
+                value: cookie.value,
+                ...(cookie.options ?? {}),
+                path: cookie.options?.path ?? "/",
+              });
+            }
+          } catch {
+            // The `setAll` method is called from a Server Component.
+            // This can be ignored if you have middleware refreshing user sessions.
           }
         },
       },

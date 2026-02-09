@@ -18,18 +18,18 @@ export default async function SiteHeader() {
 
   return (
     <header style={styles.wrap}>
-      <div className="container" style={styles.inner}>
+      <div className="container site-header-inner">
         <Link href="/" style={styles.brand}>
-          <span style={styles.logo}>EM</span>
-          <span>
+          <span style={styles.logo}>PD</span>
+          <span className="brand-text">
             <div style={styles.title}>Passion Driven</div>
             <div style={styles.subtitle}>Cars • Parts • Memorabilia</div>
           </span>
         </Link>
 
-        <nav style={styles.nav}>
+        <nav className="site-nav">
           {nav.map((i) => (
-            <Link key={i.href} href={i.href} style={styles.navLink}>
+            <Link key={i.href} href={i.href} className="nav-link" style={styles.navLink}>
               {i.label}
             </Link>
           ))}
@@ -49,14 +49,6 @@ const styles: Record<string, CSSProperties> = {
     backdropFilter: "blur(10px)",
     borderBottom: "1px solid var(--border)",
   },
-  inner: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 16,
-    paddingTop: 14,
-    paddingBottom: 14,
-  },
   brand: { display: "flex", alignItems: "center", gap: 12 },
   logo: {
     width: 42,
@@ -68,10 +60,10 @@ const styles: Record<string, CSSProperties> = {
     border: "1px solid var(--border)",
     color: "var(--green-900)",
     fontWeight: 900,
+    flexShrink: 0,
   },
   title: { fontWeight: 900, lineHeight: 1.1 },
   subtitle: { color: "var(--muted)", fontSize: 13, fontWeight: 650 },
-  nav: { display: "flex", alignItems: "center", gap: 12 },
   navLink: {
     padding: "10px 10px",
     borderRadius: 12,

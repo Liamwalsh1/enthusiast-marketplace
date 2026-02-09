@@ -220,6 +220,15 @@ function LoginContent() {
             autoComplete={mode === "signin" ? "current-password" : "new-password"}
           />
 
+          {mode === "signup" && (
+            <p style={styles.legal}>
+              By signing up, you agree to our{" "}
+              <Link href="/terms" style={styles.legalLink}>Terms of Service</Link>
+              {" "}and{" "}
+              <Link href="/privacy" style={styles.legalLink}>Privacy Policy</Link>.
+            </p>
+          )}
+
           <button className="btn btn-primary" type="submit" disabled={loading}>
             {loading ? "Please wait…" : mode === "signin" ? "Sign in" : "Sign up"}
           </button>
@@ -253,6 +262,18 @@ const styles: Record<string, CSSProperties> = {
   h1: { margin: "8px 0 0", fontSize: 34, fontWeight: 950, color: "var(--green-900)" },
   p: { margin: "6px 0 0", color: "var(--muted)", fontWeight: 650 },
   label: { marginTop: 12, display: "block", fontWeight: 800, color: "var(--green-900)" },
+  legal: {
+    margin: 0,
+    fontSize: 13,
+    color: "var(--muted)",
+    fontWeight: 600,
+    lineHeight: 1.5,
+  },
+  legalLink: {
+    color: "var(--green-900)",
+    fontWeight: 700,
+    textDecoration: "underline",
+  },
   notice: {
     marginTop: 14,
     padding: 12,

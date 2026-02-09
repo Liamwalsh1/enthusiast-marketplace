@@ -1,39 +1,128 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import ImageCarousel from "@/app/components/ImageCarousel";
 import MessageSellerCard from "@/app/components/MessageSellerCard";
 import SellerControls from "@/app/components/SellerControls";
+import CommentSection from "@/app/components/CommentSection";
+import SaveListingButton from "@/app/components/SaveListingButton";
+import SellerReviewsSection from "@/app/components/SellerReviewsSection";
+import TrackRecentlyViewed from "@/app/components/TrackRecentlyViewed";
 import { createServerSupabaseClient } from "@/app/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://passiondriven.ie";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const supabase = await createServerSupabaseClient();
+
+  const { data: listing } = await supabase
+    .from("listings")
+    .select("title, price_eur, location, category, make, model, year, image_urls, description")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (!listing) {
+    return {
+      title: "Listing Not Found",
+      description: "This listing may have been removed or is no longer available.",
+    };
+  }
+
+  // Build a descriptive title
+  let title = listing.title;
+  if (listing.location) {
+    title += ` in ${listing.location}`;
+  }
+  if (listing.price_eur) {
+    title += ` | €${new Intl.NumberFormat("en-IE").format(listing.price_eur)}`;
+  }
+
+  // Build description
+  let description = "";
+  if (listing.category === "car" && listing.make) {
+    description = `${listing.year || ""} ${listing.make} ${listing.model || ""} for sale`.trim();
+    if (listing.location) description += ` in ${listing.location}`;
+    description += ". ";
+  }
+  description += listing.description?.slice(0, 150) || "View details and contact the seller.";
+
+  const imageUrl = listing.image_urls?.[0];
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title: listing.title,
+      description,
+      url: `${siteUrl}/listings/${id}`,
+      type: "website",
+      images: imageUrl
+        ? [
+            {
+              url: imageUrl,
+              width: 1200,
+              height: 630,
+              alt: listing.title,
+            },
+          ]
+        : undefined,
+    },
+    twitter: {
+      card: imageUrl ? "summary_large_image" : "summary",
+      title: listing.title,
+      description,
+      images: imageUrl ? [imageUrl] : undefined,
+    },
+  };
+}
+
 type Listing = {
   id: string;
   title: string;
-  category: "car" | "part" | "memorabilia";
+  category: "car" | "part" | "memorabilia" | "wheels";
   price_eur: number | null;
   location: string | null;
   condition: string | null;
   description: string | null;
   created_at: string;
   image_urls?: string[] | null;
+  blur_data_urls?: string[] | null;
   owner_id: string | null;
   status?: string | null;
+  rejection_reason?: string | null;
+  // Car-specific fields
+  make?: string | null;
+  model?: string | null;
+  year?: number | null;
+  engine_cc?: number | null;
+  engine_type?: string | null;
+  transmission?: string | null;
+  mileage_km?: number | null;
+  vin?: string | null;
+  // Wheel-specific fields
+  wheel_diameter?: number | null;
+  wheel_width?: number | null;
+  bolt_pattern?: string | null;
+  wheel_offset?: number | null;
+  center_bore?: number | null;
+  wheel_quantity?: number | null;
+  wheel_brand?: string | null;
+  wheel_material?: string | null;
+  wheel_style?: string | null;
 };
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-type ListingError =
-  | {
-      kind: "missing-env";
-      missing: string[];
-    }
-  | {
-      kind: "fetch";
-      status: number;
-      detail: string;
-    };
+type ListingError = {
+  kind: "fetch";
+  status: number;
+  detail: string;
+};
 
 function formatPrice(price: number | null) {
   if (price === null || Number.isNaN(price)) return "€—";
@@ -42,103 +131,68 @@ function formatPrice(price: number | null) {
 
 function labelCategory(cat: Listing["category"]) {
   if (cat === "car") return "Car";
+  if (cat === "wheels") return "Wheels";
   if (cat === "part") return "Part";
   return "Memorabilia";
 }
 
+function formatMileage(km: number | null | undefined) {
+  if (km === null || km === undefined) return null;
+  return new Intl.NumberFormat("en-IE").format(km) + " km";
+}
+
+function formatEngineSize(cc: number | null | undefined) {
+  if (cc === null || cc === undefined) return null;
+  return new Intl.NumberFormat("en-IE").format(cc) + " cc";
+}
+
+// getListing now uses the Supabase client passed in to respect RLS policies
 async function getListing(
-  id: string
+  id: string,
+  supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>
 ): Promise<{
   listing: Listing | null;
   error: ListingError | null;
 }> {
-  const missing: string[] = [];
-  if (!SUPABASE_URL) missing.push("NEXT_PUBLIC_SUPABASE_URL");
-  if (!SUPABASE_ANON_KEY) missing.push("NEXT_PUBLIC_SUPABASE_ANON_KEY");
+  const { data, error } = await supabase
+    .from("listings")
+    .select("id,title,category,price_eur,location,condition,description,created_at,image_urls,blur_data_urls,owner_id,make,model,year,engine_cc,engine_type,transmission,mileage_km,vin,rejection_reason,status,wheel_diameter,wheel_width,bolt_pattern,wheel_offset,center_bore,wheel_quantity,wheel_brand,wheel_material,wheel_style")
+    .eq("id", id)
+    .maybeSingle();
 
-  if (missing.length > 0) {
-    console.error("Listing fetch aborted. Missing env vars:", missing);
-    return { listing: null, error: { kind: "missing-env", missing } };
-  }
-
-  const supabaseUrl = SUPABASE_URL!;
-  const supabaseAnonKey = SUPABASE_ANON_KEY!;
-
-  const baseSelect =
-    "id,title,category,price_eur,location,condition,description,created_at,image_urls,owner_id";
-
-  async function fetchListing(selectFields: string) {
-    const url = new URL("/rest/v1/listings", supabaseUrl);
-    url.searchParams.set("select", selectFields);
-    url.searchParams.set("id", `eq.${id}`);
-
-    const res = await fetch(url.toString(), {
-      headers: {
-        apikey: supabaseAnonKey,
-        Authorization: `Bearer ${supabaseAnonKey}`,
-        Accept: "application/json",
-        "Accept-Profile": "public",
-      },
-      cache: "no-store",
-    });
-
-    if (!res.ok) {
-      const text = await res.text();
-      return { ok: false as const, status: res.status, detail: text || "Unknown error" };
-    }
-
-    const rows = (await res.json()) as Listing[];
-    return { ok: true as const, listing: rows[0] ?? null };
-  }
-
-  const initialSelect = `${baseSelect},status`;
-  const initialResult = await fetchListing(initialSelect);
-
-  if (initialResult.ok) {
-    return { listing: initialResult.listing, error: null };
-  }
-
-  const missingStatus =
-    initialResult.detail.toLowerCase().includes("column") &&
-    initialResult.detail.toLowerCase().includes("status") &&
-    initialResult.detail.toLowerCase().includes("does not exist");
-
-  if (missingStatus) {
-    console.warn("listings.status missing in DB — run migration add_listings_status.sql");
-    const fallbackResult = await fetchListing(baseSelect);
-    if (fallbackResult.ok) {
-      const listing = fallbackResult.listing ? { ...fallbackResult.listing, status: null } : null;
-      return { listing, error: null };
-    }
-    console.error("Supabase fetch failed:", fallbackResult.status, fallbackResult.detail);
+  if (error) {
+    console.error("Supabase fetch failed:", error.message);
     return {
       listing: null,
-      error: { kind: "fetch", status: fallbackResult.status, detail: fallbackResult.detail },
+      error: { kind: "fetch", status: 500, detail: error.message },
     };
   }
 
-  console.error("Supabase fetch failed:", initialResult.status, initialResult.detail);
-  return { listing: null, error: { kind: "fetch", status: initialResult.status, detail: initialResult.detail } };
+  return { listing: data as Listing | null, error: null };
 }
 
 export default async function ListingDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ submitted?: string }>;
 }) {
   const { id } = await params;
+  const { submitted } = await searchParams;
+  const justSubmitted = submitted === "true";
   const supabase = await createServerSupabaseClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  const { listing, error: listingError } = await getListing(id);
-  const isMissingEnv = listingError?.kind === "missing-env";
+  const { listing, error: listingError } = await getListing(id, supabase);
   const isFetchError = listingError?.kind === "fetch";
-  const missingEnvList = listingError?.kind === "missing-env" ? listingError.missing : [];
   const fetchDetail = listingError?.kind === "fetch" ? listingError.detail : null;
   const devDetail = process.env.NODE_ENV !== "production" ? fetchDetail : null;
   const isOwner = listing && user ? listing.owner_id === user.id : false;
   const isSold = listing?.status === "sold";
+  const isPending = listing?.status === "pending";
+  const isRejected = listing?.status === "rejected";
 
   return (
     <main className="container">
@@ -146,15 +200,30 @@ export default async function ListingDetailPage({
         ← Back to Browse
       </Link>
 
+      {justSubmitted && isPending && (
+        <div
+          className="card"
+          style={{
+            marginTop: 12,
+            padding: 16,
+            background: "rgba(34,197,94,0.1)",
+            border: "1px solid rgba(34,197,94,0.3)",
+          }}
+        >
+          <div style={{ fontWeight: 900, color: "rgba(22,101,52,1)" }}>Listing submitted!</div>
+          <p style={{ color: "rgba(22,101,52,0.9)", fontWeight: 650, marginTop: 6, marginBottom: 0 }}>
+            Your listing is now pending admin review. You&apos;ll be notified once it&apos;s approved and visible to buyers.
+          </p>
+        </div>
+      )}
+
       {!listing ? (
         <section className="card" style={{ padding: 16, marginTop: 12 }}>
           <div style={{ fontWeight: 950, color: "var(--green-900)" }}>
-            {isMissingEnv ? "Configuration issue" : isFetchError ? "Unable to load listing" : "Listing not found"}
+            {isFetchError ? "Unable to load listing" : "Listing not found"}
           </div>
           <div style={{ color: "var(--muted)", fontWeight: 650 }}>
-            {isMissingEnv
-              ? `Missing Supabase env vars: ${missingEnvList.join(", ")}`
-              : isFetchError
+            {isFetchError
               ? "Supabase returned an error while fetching this listing."
               : "This listing may have been removed."}
           </div>
@@ -178,7 +247,11 @@ export default async function ListingDetailPage({
         <div className="grid-2" style={{ marginTop: 12 }}>
           <section className="card" style={{ padding: 16 }}>
             {listing.image_urls?.length ? (
-              <ImageCarousel title={listing.title} urls={listing.image_urls ?? []} />
+              <ImageCarousel
+                title={listing.title}
+                urls={listing.image_urls ?? []}
+                blurDataUrls={listing.blur_data_urls ?? undefined}
+              />
 
             ) : (
               <div
@@ -217,45 +290,191 @@ export default async function ListingDetailPage({
                 gap: 12,
                 flexWrap: "wrap",
                 alignItems: "center",
+                justifyContent: "space-between",
               }}
             >
-              <h1
-                style={{
-                  margin: 0,
-                  fontSize: 34,
-                  lineHeight: 1.1,
-                  fontWeight: 950,
-                  color: "var(--green-900)",
-                }}
-              >
-                {listing.title}
-              </h1>
-              {isSold ? (
-                <span
-                  className="pill"
-                  style={{
-                    background: "rgba(220,38,38,0.1)",
-                    border: "1px solid rgba(220,38,38,0.4)",
-                    color: "rgba(153,27,27,1)",
-                    fontWeight: 900,
-                    letterSpacing: 1,
-                  }}
-                >
-                  SOLD
-                </span>
-              ) : null}
+              <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+                <h1 className="listing-title">
+                  {listing.title}
+                </h1>
+                {isSold && (
+                  <span
+                    className="pill"
+                    style={{
+                      background: "rgba(220,38,38,0.1)",
+                      border: "1px solid rgba(220,38,38,0.4)",
+                      color: "rgba(153,27,27,1)",
+                      fontWeight: 900,
+                      letterSpacing: 1,
+                    }}
+                  >
+                    SOLD
+                  </span>
+                )}
+                {isPending && (
+                  <span
+                    className="pill"
+                    style={{
+                      background: "rgba(234,179,8,0.1)",
+                      border: "1px solid rgba(234,179,8,0.4)",
+                      color: "rgba(161,98,7,1)",
+                      fontWeight: 900,
+                      letterSpacing: 1,
+                    }}
+                  >
+                    PENDING REVIEW
+                  </span>
+                )}
+                {isRejected && (
+                  <span
+                    className="pill"
+                    style={{
+                      background: "rgba(220,38,38,0.1)",
+                      border: "1px solid rgba(220,38,38,0.4)",
+                      color: "rgba(153,27,27,1)",
+                      fontWeight: 900,
+                      letterSpacing: 1,
+                    }}
+                  >
+                    REJECTED
+                  </span>
+                )}
+              </div>
+              {!isOwner && (
+                <SaveListingButton listingId={listing.id} isLoggedIn={!!user} />
+              )}
             </div>
 
-            <div
-              style={{
-                marginTop: 8,
-                fontSize: 22,
-                fontWeight: 950,
-                color: "var(--green-900)",
-              }}
-            >
+            <div className="listing-price">
               {formatPrice(listing.price_eur)}
             </div>
+
+            {listing.category === "car" && (listing.make || listing.model || listing.year || listing.mileage_km || listing.engine_cc || listing.transmission) && (
+              <div style={{ marginTop: 16 }}>
+                <div
+                  style={{
+                    fontWeight: 950,
+                    color: "var(--green-900)",
+                    marginBottom: 10,
+                  }}
+                >
+                  Vehicle Specifications
+                </div>
+                <div className="spec-grid">
+                  {listing.make && (
+                    <div style={specItemStyle}>
+                      <div style={specLabelStyle}>Make</div>
+                      <div style={specValueStyle}>{listing.make}</div>
+                    </div>
+                  )}
+                  {listing.model && (
+                    <div style={specItemStyle}>
+                      <div style={specLabelStyle}>Model</div>
+                      <div style={specValueStyle}>{listing.model}</div>
+                    </div>
+                  )}
+                  {listing.year && (
+                    <div style={specItemStyle}>
+                      <div style={specLabelStyle}>Year</div>
+                      <div style={specValueStyle}>{listing.year}</div>
+                    </div>
+                  )}
+                  {listing.mileage_km !== null && listing.mileage_km !== undefined && (
+                    <div style={specItemStyle}>
+                      <div style={specLabelStyle}>Mileage</div>
+                      <div style={specValueStyle}>{formatMileage(listing.mileage_km)}</div>
+                    </div>
+                  )}
+                  {listing.engine_cc && (
+                    <div style={specItemStyle}>
+                      <div style={specLabelStyle}>Engine</div>
+                      <div style={specValueStyle}>
+                        {formatEngineSize(listing.engine_cc)}
+                        {listing.engine_type ? ` ${listing.engine_type}` : ""}
+                      </div>
+                    </div>
+                  )}
+                  {listing.transmission && (
+                    <div style={specItemStyle}>
+                      <div style={specLabelStyle}>Transmission</div>
+                      <div style={specValueStyle}>{listing.transmission}</div>
+                    </div>
+                  )}
+                  {listing.vin && (
+                    <div style={{ ...specItemStyle, gridColumn: "1 / -1" }}>
+                      <div style={specLabelStyle}>VIN</div>
+                      <div style={{ ...specValueStyle, fontFamily: "monospace", fontSize: 13 }}>{listing.vin}</div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {listing.category === "wheels" && (listing.wheel_diameter || listing.wheel_width || listing.bolt_pattern || listing.wheel_brand || listing.wheel_quantity) && (
+              <div style={{ marginTop: 16 }}>
+                <div
+                  style={{
+                    fontWeight: 950,
+                    color: "var(--green-900)",
+                    marginBottom: 10,
+                  }}
+                >
+                  Wheel Specifications
+                </div>
+                <div className="spec-grid">
+                  {listing.wheel_brand && (
+                    <div style={specItemStyle}>
+                      <div style={specLabelStyle}>Brand</div>
+                      <div style={specValueStyle}>{listing.wheel_brand}</div>
+                    </div>
+                  )}
+                  {listing.wheel_style && (
+                    <div style={specItemStyle}>
+                      <div style={specLabelStyle}>Style</div>
+                      <div style={specValueStyle}>{listing.wheel_style}</div>
+                    </div>
+                  )}
+                  {(listing.wheel_diameter || listing.wheel_width) && (
+                    <div style={specItemStyle}>
+                      <div style={specLabelStyle}>Size</div>
+                      <div style={specValueStyle}>
+                        {listing.wheel_diameter}&quot; x {listing.wheel_width}&quot;
+                      </div>
+                    </div>
+                  )}
+                  {listing.bolt_pattern && (
+                    <div style={specItemStyle}>
+                      <div style={specLabelStyle}>Bolt Pattern</div>
+                      <div style={specValueStyle}>{listing.bolt_pattern}</div>
+                    </div>
+                  )}
+                  {listing.wheel_offset !== null && listing.wheel_offset !== undefined && (
+                    <div style={specItemStyle}>
+                      <div style={specLabelStyle}>Offset (ET)</div>
+                      <div style={specValueStyle}>{listing.wheel_offset > 0 ? `+${listing.wheel_offset}` : listing.wheel_offset}</div>
+                    </div>
+                  )}
+                  {listing.center_bore && (
+                    <div style={specItemStyle}>
+                      <div style={specLabelStyle}>Center Bore</div>
+                      <div style={specValueStyle}>{listing.center_bore} mm</div>
+                    </div>
+                  )}
+                  {listing.wheel_quantity && (
+                    <div style={specItemStyle}>
+                      <div style={specLabelStyle}>Quantity</div>
+                      <div style={specValueStyle}>{listing.wheel_quantity}</div>
+                    </div>
+                  )}
+                  {listing.wheel_material && (
+                    <div style={specItemStyle}>
+                      <div style={specLabelStyle}>Material</div>
+                      <div style={specValueStyle}>{listing.wheel_material}</div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             <div style={{ marginTop: 14 }}>
               <div
@@ -283,6 +502,54 @@ export default async function ListingDetailPage({
           </section>
 
           <aside style={{ display: "grid", gap: 12, alignContent: "flex-start" }}>
+            {isOwner && isPending && (
+              <div
+                className="card"
+                style={{
+                  padding: 16,
+                  background: "rgba(234,179,8,0.1)",
+                  border: "1px solid rgba(234,179,8,0.4)",
+                }}
+              >
+                <div style={{ fontWeight: 900, color: "rgba(161,98,7,1)" }}>Pending Review</div>
+                <p style={{ color: "rgba(161,98,7,0.9)", fontWeight: 650, marginTop: 6, marginBottom: 0 }}>
+                  Your listing is awaiting admin approval. It will not appear in search results until approved.
+                </p>
+              </div>
+            )}
+            {isOwner && isRejected && (
+              <div
+                className="card"
+                style={{
+                  padding: 16,
+                  background: "rgba(220,38,38,0.08)",
+                  border: "1px solid rgba(220,38,38,0.3)",
+                }}
+              >
+                <div style={{ fontWeight: 900, color: "rgba(153,27,27,1)" }}>Listing Rejected</div>
+                <p style={{ color: "rgba(153,27,27,0.9)", fontWeight: 650, marginTop: 6, marginBottom: 0 }}>
+                  Your listing was not approved. Please edit and resubmit.
+                </p>
+                {listing.rejection_reason && (
+                  <div
+                    style={{
+                      marginTop: 12,
+                      padding: 12,
+                      background: "rgba(255,255,255,0.5)",
+                      borderRadius: 8,
+                      border: "1px solid rgba(220,38,38,0.2)",
+                    }}
+                  >
+                    <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(153,27,27,0.7)", textTransform: "uppercase", marginBottom: 4 }}>
+                      Reason
+                    </div>
+                    <div style={{ color: "rgba(153,27,27,1)", fontWeight: 650 }}>
+                      {listing.rejection_reason}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
             {isOwner ? (
               <SellerControls listingId={listing.id} status={listing.status ?? null} />
             ) : isSold ? (
@@ -312,6 +579,50 @@ export default async function ListingDetailPage({
           </aside>
         </div>
       )}
+
+      {listing && listing.owner_id && (
+        <SellerReviewsSection
+          sellerId={listing.owner_id}
+          listingId={listing.id}
+          listingTitle={listing.title}
+        />
+      )}
+
+      {listing && (
+        <CommentSection listingId={listing.id} sellerId={listing.owner_id} />
+      )}
+
+      {listing && (
+        <TrackRecentlyViewed
+          id={listing.id}
+          title={listing.title}
+          price_eur={listing.price_eur}
+          image_url={listing.image_urls?.[0] ?? null}
+          category={listing.category}
+        />
+      )}
     </main>
   );
 }
+
+const specItemStyle: React.CSSProperties = {
+  padding: 10,
+  borderRadius: 10,
+  background: "var(--soft)",
+  border: "1px solid var(--border)",
+};
+
+const specLabelStyle: React.CSSProperties = {
+  fontSize: 11,
+  fontWeight: 700,
+  color: "var(--muted)",
+  textTransform: "uppercase",
+  letterSpacing: 0.5,
+};
+
+const specValueStyle: React.CSSProperties = {
+  fontSize: 15,
+  fontWeight: 800,
+  color: "var(--green-900)",
+  marginTop: 2,
+};

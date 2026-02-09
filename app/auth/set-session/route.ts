@@ -9,7 +9,9 @@ function requireEnv(value: string | undefined, name: string) {
 
 export async function POST(request: Request) {
   const cookieStore = await cookies();
-  const response = new NextResponse(null, { status: 204 });
+
+  // We'll collect cookies to set and apply them at the end
+  const cookiesToSet: Array<{ name: string; value: string; options?: Record<string, unknown> }> = [];
 
   let body: { access_token?: string; refresh_token?: string };
   try {
@@ -35,12 +37,7 @@ export async function POST(request: Request) {
         },
         setAll(cookies) {
           cookies.forEach((cookie) => {
-            response.cookies.set({
-              name: cookie.name,
-              value: cookie.value,
-              ...(cookie.options ?? {}),
-              path: cookie.options?.path ?? "/",
-            });
+            cookiesToSet.push(cookie);
           });
         },
       },
@@ -54,6 +51,24 @@ export async function POST(request: Request) {
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 400 });
+  }
+
+  // Create response and set all cookies
+  const response = new NextResponse(JSON.stringify({ success: true }), {
+    status: 200,
+    headers: { "Content-Type": "application/json" },
+  });
+
+  for (const cookie of cookiesToSet) {
+    response.cookies.set({
+      name: cookie.name,
+      value: cookie.value,
+      path: (cookie.options?.path as string) ?? "/",
+      maxAge: cookie.options?.maxAge as number | undefined,
+      httpOnly: (cookie.options?.httpOnly as boolean) ?? true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: (cookie.options?.sameSite as "lax" | "strict" | "none") ?? "lax",
+    });
   }
 
   return response;

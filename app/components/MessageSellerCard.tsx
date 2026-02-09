@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/app/lib/supabaseClient";
 import { ensureServerSession } from "@/app/lib/auth/ensureServerSession";
+import SellerRatingBadge from "./SellerRatingBadge";
 
 type Props = {
   listingId: string;
@@ -154,7 +155,10 @@ export default function MessageSellerCard({ listingId, listingTitle, sellerId }:
 
   return (
     <div className="card" style={cardStyles.card}>
-      <div style={cardStyles.title}>Message seller</div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+        <div style={cardStyles.title}>Message seller</div>
+        <SellerRatingBadge sellerId={sellerId} />
+      </div>
       <form onSubmit={startConversation} style={{ marginTop: 8 }}>
         <textarea
           className="textarea"
