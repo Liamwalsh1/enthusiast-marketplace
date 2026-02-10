@@ -35,7 +35,7 @@ export default async function Home() {
 
         <h1 className="hero-title">Buy and sell enthusiast cars, parts, and memorabilia.</h1>
         <p style={styles.p}>
-          Ireland's home for everything from small japanese convertibles to quirky european sedans.
+          Ireland's home for everything from pristine japanese sports cars to project-worthy european sedans.
         </p>
 
         <div style={styles.actions}>
