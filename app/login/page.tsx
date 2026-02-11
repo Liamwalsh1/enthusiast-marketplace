@@ -33,6 +33,8 @@ function LoginContent() {
   const [mode, setMode] = useState<Mode>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -110,12 +112,27 @@ function LoginContent() {
       return;
     }
 
+    if (mode === "signup" && !fullName.trim()) {
+      setError("Full name is required.");
+      return;
+    }
+
+    if (mode === "signup" && passwordValue !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
     setLoading(true);
 
     if (mode === "signup") {
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: emailValue,
         password: passwordValue,
+        options: {
+          data: {
+            full_name: fullName.trim(),
+          },
+        },
       });
 
       setLoading(false);
@@ -141,6 +158,8 @@ function LoginContent() {
       setMessage("Check your email to confirm, then sign in with your password.");
       setMode("signin");
       setPassword("");
+      setConfirmPassword("");
+      setFullName("");
       return;
     }
 
@@ -182,6 +201,8 @@ function LoginContent() {
               setMode("signin");
               setMessage(null);
               setError(null);
+              setFullName("");
+              setConfirmPassword("");
             }}
           >
             Sign in
@@ -193,6 +214,7 @@ function LoginContent() {
               setMode("signup");
               setMessage(null);
               setError(null);
+              setConfirmPassword("");
             }}
           >
             Sign up
@@ -200,6 +222,20 @@ function LoginContent() {
         </div>
 
         <form onSubmit={onSubmit} style={{ marginTop: 16, display: "grid", gap: 12 }}>
+          {mode === "signup" && (
+            <>
+              <label style={styles.label}>Full Name</label>
+              <input
+                className="input"
+                type="text"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="John Doe"
+                autoComplete="name"
+              />
+            </>
+          )}
+
           <label style={styles.label}>Email</label>
           <input
             className="input"
@@ -219,6 +255,20 @@ function LoginContent() {
             placeholder="••••••••"
             autoComplete={mode === "signin" ? "current-password" : "new-password"}
           />
+
+          {mode === "signup" && (
+            <>
+              <label style={styles.label}>Confirm Password</label>
+              <input
+                className="input"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="••••••••"
+                autoComplete="new-password"
+              />
+            </>
+          )}
 
           {mode === "signup" && (
             <p style={styles.legal}>
