@@ -29,6 +29,7 @@ export default function SellPage() {
   const [condition, setCondition] = useState("Used");
   const [description, setDescription] = useState("");
   const [files, setFiles] = useState<File[]>([]);
+  const [videoFile, setVideoFile] = useState<File | null>(null);
 
   // Car-specific fields
   const [make, setMake] = useState("");
@@ -138,6 +139,23 @@ export default function SellPage() {
     return { urls, blurDataUrls };
   }
 
+  async function uploadVideo(listingId: string, video: File, ownerId: string): Promise<string> {
+    const ext = video.name.split(".").pop()?.toLowerCase() || "mp4";
+    const path = `${ownerId}/${listingId}/${crypto.randomUUID()}.${ext}`;
+
+    const { error } = await supabase.storage
+      .from("listings-images")
+      .upload(path, video, { contentType: video.type });
+
+    if (error) {
+      console.error("Video upload failed:", error);
+      throw error;
+    }
+
+    const { data } = supabase.storage.from("listings-images").getPublicUrl(path);
+    return data.publicUrl;
+  }
+
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setErrorMsg(null);
@@ -221,12 +239,23 @@ export default function SellPage() {
     }
 
     try {
+      const updatePayload: Record<string, unknown> = {};
+
       if (files.length > 0) {
         const { urls: imageUrls, blurDataUrls } = await uploadImages(data.id, files.slice(0, 5), user.id);
+        updatePayload.image_urls = imageUrls;
+        updatePayload.blur_data_urls = blurDataUrls;
+      }
 
+      if (videoFile) {
+        const videoUrl = await uploadVideo(data.id, videoFile, user.id);
+        updatePayload.video_url = videoUrl;
+      }
+
+      if (Object.keys(updatePayload).length > 0) {
         const { error: updateErr } = await supabase
           .from("listings")
-          .update({ image_urls: imageUrls, blur_data_urls: blurDataUrls })
+          .update(updatePayload)
           .eq("id", data.id);
 
         if (updateErr) throw updateErr;
@@ -237,8 +266,8 @@ export default function SellPage() {
       setIsSubmitting(false);
       const message =
         err && typeof err === "object" && "message" in err && typeof (err as { message?: string }).message === "string"
-          ? (err as { message?: string }).message ?? "Listing created, but image upload failed."
-          : "Listing created, but image upload failed.";
+          ? (err as { message?: string }).message ?? "Listing created, but media upload failed."
+          : "Listing created, but media upload failed.";
       setErrorMsg(message);
     }
   }
@@ -583,6 +612,28 @@ export default function SellPage() {
 
             {files.length > 0 && (
               <div style={styles.smallText}>{files.length} photo(s) selected</div>
+            )}
+
+            <label style={styles.label}>Video (optional, max 100MB)</label>
+            <input
+              className="input"
+              type="file"
+              accept="video/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0] ?? null;
+                if (file && file.size > 100 * 1024 * 1024) {
+                  setErrorMsg("Video must be under 100MB");
+                  e.target.value = "";
+                  return;
+                }
+                setVideoFile(file);
+              }}
+            />
+
+            {videoFile && (
+              <div style={styles.smallText}>
+                Video selected: {videoFile.name} ({(videoFile.size / (1024 * 1024)).toFixed(1)}MB)
+              </div>
             )}
 
             {errorMsg && (

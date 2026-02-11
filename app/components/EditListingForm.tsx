@@ -33,6 +33,7 @@ type Props = {
   initialMileageKm: number | null;
   initialVin: string;
   initialImageUrls: string[];
+  initialVideoUrl: string | null;
   // Wheel-specific props
   initialWheelDiameter: number | null;
   initialWheelWidth: number | null;
@@ -62,6 +63,7 @@ export default function EditListingForm({
   initialMileageKm,
   initialVin,
   initialImageUrls,
+  initialVideoUrl,
   initialWheelDiameter,
   initialWheelWidth,
   initialBoltPattern,
@@ -108,6 +110,11 @@ export default function EditListingForm({
   const [deletingImage, setDeletingImage] = useState<string | null>(null);
   const [uploadingImages, setUploadingImages] = useState(false);
 
+  // Video management
+  const [existingVideoUrl, setExistingVideoUrl] = useState<string | null>(initialVideoUrl);
+  const [newVideoFile, setNewVideoFile] = useState<File | null>(null);
+  const [deletingVideo, setDeletingVideo] = useState(false);
+
   const totalImageCount = existingImages.length + newFiles.length;
   const canAddMoreImages = totalImageCount < 5;
 
@@ -150,6 +157,51 @@ export default function EditListingForm({
     setExistingImages(updatedUrls);
     toast({ type: "success", message: "Image deleted" });
     setDeletingImage(null);
+  }
+
+  async function handleDeleteVideo() {
+    if (!existingVideoUrl) return;
+    setDeletingVideo(true);
+
+    const urlParts = existingVideoUrl.split("/listings-images/");
+    if (urlParts.length === 2) {
+      const storagePath = urlParts[1];
+      await supabase.storage.from("listings-images").remove([storagePath]);
+    }
+
+    const { error: updateError } = await supabase
+      .from("listings")
+      .update({ video_url: null })
+      .eq("id", listingId);
+
+    if (updateError) {
+      toast({ type: "error", message: "Failed to remove video" });
+      setDeletingVideo(false);
+      return;
+    }
+
+    setExistingVideoUrl(null);
+    toast({ type: "success", message: "Video removed" });
+    setDeletingVideo(false);
+  }
+
+  async function uploadNewVideo(): Promise<string | null> {
+    if (!newVideoFile) return null;
+
+    const ext = newVideoFile.name.split(".").pop()?.toLowerCase() || "mp4";
+    const path = `${ownerId}/${listingId}/${crypto.randomUUID()}.${ext}`;
+
+    const { error } = await supabase.storage
+      .from("listings-images")
+      .upload(path, newVideoFile, { contentType: newVideoFile.type });
+
+    if (error) {
+      console.error("Video upload failed:", error);
+      throw error;
+    }
+
+    const { data } = supabase.storage.from("listings-images").getPublicUrl(path);
+    return data.publicUrl;
   }
 
   async function uploadNewImages(): Promise<string[]> {
@@ -256,6 +308,25 @@ export default function EditListingForm({
         return;
       }
       setUploadingImages(false);
+    }
+
+    // Upload new video if any
+    if (newVideoFile) {
+      try {
+        const videoUrl = await uploadNewVideo();
+        if (videoUrl) {
+          updatePayload.video_url = videoUrl;
+        }
+      } catch (uploadErr) {
+        const message =
+          uploadErr && typeof uploadErr === "object" && "message" in uploadErr
+            ? (uploadErr as { message?: string }).message ?? "Video upload failed."
+            : "Video upload failed.";
+        setError(message);
+        toast({ type: "error", message });
+        setLoading(false);
+        return;
+      }
     }
 
     const { error: updateError } = await supabase
@@ -667,6 +738,71 @@ export default function EditListingForm({
         <div style={smallTextStyle}>Uploading images...</div>
       )}
 
+      {/* Video Management Section */}
+      <div style={sectionHeader}>Video</div>
+
+      {existingVideoUrl && (
+        <div style={videoPreviewStyle}>
+          <video
+            src={existingVideoUrl}
+            controls
+            preload="metadata"
+            style={{ width: "100%", maxHeight: 200, borderRadius: 12 }}
+          />
+          <button
+            type="button"
+            onClick={handleDeleteVideo}
+            disabled={loading || deletingVideo}
+            style={removeVideoButtonStyle}
+          >
+            {deletingVideo ? "Removing..." : "Remove video"}
+          </button>
+        </div>
+      )}
+
+      {!existingVideoUrl && !newVideoFile && (
+        <div style={noImagesStyle}>No video yet</div>
+      )}
+
+      {newVideoFile && (
+        <div style={newFileItemStyle}>
+          <span style={fileNameStyle}>
+            {newVideoFile.name} ({(newVideoFile.size / (1024 * 1024)).toFixed(1)}MB)
+          </span>
+          <button
+            type="button"
+            onClick={() => setNewVideoFile(null)}
+            disabled={loading}
+            style={removeFileButtonStyle}
+          >
+            Remove
+          </button>
+        </div>
+      )}
+
+      {!existingVideoUrl && !newVideoFile && (
+        <div style={{ marginTop: 8 }}>
+          <label style={smallTextStyle}>Add video (max 100MB)</label>
+          <input
+            className="input"
+            type="file"
+            accept="video/*"
+            disabled={loading}
+            onChange={(e) => {
+              const file = e.target.files?.[0] ?? null;
+              if (file && file.size > 100 * 1024 * 1024) {
+                setError("Video must be under 100MB");
+                toast({ type: "error", message: "Video must be under 100MB" });
+                e.target.value = "";
+                return;
+              }
+              setNewVideoFile(file);
+              e.target.value = "";
+            }}
+          />
+        </div>
+      )}
+
       {error ? (
         <div className="card" style={errorStyles}>
           {error}
@@ -799,4 +935,21 @@ const removeFileButtonStyle: CSSProperties = {
   fontWeight: 700,
   fontSize: 12,
   cursor: "pointer",
+};
+
+const videoPreviewStyle: CSSProperties = {
+  display: "grid",
+  gap: 12,
+};
+
+const removeVideoButtonStyle: CSSProperties = {
+  padding: "8px 16px",
+  borderRadius: 8,
+  border: "1px solid rgba(220,38,38,0.3)",
+  background: "rgba(220,38,38,0.08)",
+  color: "rgba(153,27,27,1)",
+  fontWeight: 700,
+  fontSize: 13,
+  cursor: "pointer",
+  justifySelf: "start",
 };

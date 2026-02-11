@@ -94,6 +94,7 @@ type Listing = {
   created_at: string;
   image_urls?: string[] | null;
   blur_data_urls?: string[] | null;
+  video_url?: string | null;
   owner_id: string | null;
   status?: string | null;
   rejection_reason?: string | null;
@@ -156,7 +157,7 @@ async function getListing(
 }> {
   const { data, error } = await supabase
     .from("listings")
-    .select("id,title,category,price_eur,location,condition,description,created_at,image_urls,blur_data_urls,owner_id,make,model,year,engine_cc,engine_type,transmission,mileage_km,vin,rejection_reason,status,wheel_diameter,wheel_width,bolt_pattern,wheel_offset,center_bore,wheel_quantity,wheel_brand,wheel_material,wheel_style")
+    .select("id,title,category,price_eur,location,condition,description,created_at,image_urls,blur_data_urls,video_url,owner_id,make,model,year,engine_cc,engine_type,transmission,mileage_km,vin,rejection_reason,status,wheel_diameter,wheel_width,bolt_pattern,wheel_offset,center_bore,wheel_quantity,wheel_brand,wheel_material,wheel_style")
     .eq("id", id)
     .maybeSingle();
 
@@ -252,7 +253,6 @@ export default async function ListingDetailPage({
                 urls={listing.image_urls ?? []}
                 blurDataUrls={listing.blur_data_urls ?? undefined}
               />
-
             ) : (
               <div
                 style={{
@@ -267,6 +267,34 @@ export default async function ListingDetailPage({
                 }}
               >
                 No photos yet
+              </div>
+            )}
+
+            {listing.video_url && (
+              <div style={{ marginTop: 16 }}>
+                <div
+                  style={{
+                    fontWeight: 950,
+                    color: "var(--green-900)",
+                    marginBottom: 10,
+                  }}
+                >
+                  Video
+                </div>
+                <video
+                  src={listing.video_url}
+                  controls
+                  playsInline
+                  preload="metadata"
+                  style={{
+                    width: "100%",
+                    maxHeight: 400,
+                    borderRadius: 18,
+                    background: "#000",
+                  }}
+                >
+                  Your browser does not support the video tag.
+                </video>
               </div>
             )}
 
