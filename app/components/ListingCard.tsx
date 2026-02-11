@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { type CSSProperties, useState, useCallback } from "react";
+import Image from "next/image";
+import { type CSSProperties } from "react";
 import SaveListingButton from "./SaveListingButton";
 
 type CategoryType = "car" | "part" | "memorabilia" | "wheels";
@@ -32,6 +33,7 @@ type Props = {
   listing: Listing;
   isLoggedIn: boolean;
   showCategory?: boolean;
+  priority?: boolean;
 };
 
 function formatPrice(price: number | null) {
@@ -51,13 +53,8 @@ function labelCategory(cat: CategoryType) {
   return "Memorabilia";
 }
 
-export default function ListingCard({ listing, isLoggedIn, showCategory = false }: Props) {
+export default function ListingCard({ listing, isLoggedIn, showCategory = false, priority = false }: Props) {
   const isSold = listing.status === "sold";
-  const [imageLoaded, setImageLoaded] = useState(false);
-
-  const handleImageLoad = useCallback(() => {
-    setImageLoaded(true);
-  }, []);
 
   const blurDataUrl = listing.blur_data_urls?.[0];
   const imageUrl = listing.image_urls?.[0];
@@ -67,26 +64,15 @@ export default function ListingCard({ listing, isLoggedIn, showCategory = false 
       <Link href={`/listings/${listing.id}`} style={styles.cardLink}>
         {imageUrl ? (
           <div style={styles.imageWrap}>
-            {/* Blur placeholder */}
-            {blurDataUrl && !imageLoaded && (
-              <img
-                src={blurDataUrl}
-                alt=""
-                aria-hidden="true"
-                style={styles.blurPlaceholder}
-              />
-            )}
-            <img
+            <Image
               src={imageUrl}
               alt={listing.title}
-              style={{
-                ...styles.listingImage,
-                opacity: imageLoaded ? 1 : 0,
-                transition: "opacity 0.3s ease",
-              }}
-              loading="lazy"
-              decoding="async"
-              onLoad={handleImageLoad}
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+              style={{ objectFit: "cover" }}
+              priority={priority}
+              placeholder={blurDataUrl ? "blur" : "empty"}
+              blurDataURL={blurDataUrl}
             />
           </div>
         ) : (
@@ -152,21 +138,6 @@ const styles: Record<string, CSSProperties> = {
     height: 180,
     overflow: "hidden",
     background: "var(--soft)",
-    position: "relative",
-  },
-  blurPlaceholder: {
-    position: "absolute",
-    inset: 0,
-    width: "100%",
-    height: "100%",
-    objectFit: "cover",
-    filter: "blur(20px)",
-    transform: "scale(1.1)",
-  },
-  listingImage: {
-    width: "100%",
-    height: "100%",
-    objectFit: "cover",
     position: "relative",
   },
   noImage: {

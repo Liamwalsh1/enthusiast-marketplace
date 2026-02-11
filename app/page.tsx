@@ -50,12 +50,13 @@ export default async function Home() {
         <section>
           <h2 style={styles.sectionTitle}>Featured Listings</h2>
           <div className="grid-4">
-            {featuredListings.map((listing) => (
+            {featuredListings.map((listing, index) => (
               <ListingCard
                 key={listing.id}
                 listing={listing}
                 isLoggedIn={isLoggedIn}
                 showCategory
+                priority={index < 4}
               />
             ))}
           </div>
