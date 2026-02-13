@@ -27,6 +27,7 @@ type Listing = {
   status?: string | null;
   image_urls?: string[] | null;
   blur_data_urls?: string[] | null;
+  boosted_until?: string | null;
   // Car-specific fields
   make?: string | null;
   model?: string | null;
@@ -204,10 +205,12 @@ function BrowsePageContent() {
       setErrorMsg(null);
 
       // Build base query for both count and data
+      // Order by boosted_until first (boosted listings appear at top), then by created_at
       let baseQuery = supabase
         .from("listings")
-        .select("id,title,category,price_eur,location,condition,created_at,status,image_urls,blur_data_urls,make,model,year,mileage_km,transmission,wheel_diameter,wheel_width,bolt_pattern,wheel_brand,wheel_quantity", { count: "exact" })
+        .select("id,title,category,price_eur,location,condition,created_at,status,image_urls,blur_data_urls,make,model,year,mileage_km,transmission,wheel_diameter,wheel_width,bolt_pattern,wheel_brand,wheel_quantity,boosted_until", { count: "exact" })
         .in("status", ["active", "sold"]) // Only show approved listings
+        .order("boosted_until", { ascending: false, nullsFirst: false })
         .order("created_at", { ascending: false });
 
       // Apply filters - search across multiple fields

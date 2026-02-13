@@ -7,6 +7,7 @@ import CommentSection from "@/app/components/CommentSection";
 import SaveListingButton from "@/app/components/SaveListingButton";
 import SellerReviewsSection from "@/app/components/SellerReviewsSection";
 import TrackRecentlyViewed from "@/app/components/TrackRecentlyViewed";
+import PromotionCard from "@/app/components/PromotionCard";
 import { createServerSupabaseClient } from "@/app/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -117,6 +118,9 @@ type Listing = {
   wheel_brand?: string | null;
   wheel_material?: string | null;
   wheel_style?: string | null;
+  // Promotion fields
+  boosted_until?: string | null;
+  featured_until?: string | null;
 };
 
 type ListingError = {
@@ -157,7 +161,7 @@ async function getListing(
 }> {
   const { data, error } = await supabase
     .from("listings")
-    .select("id,title,category,price_eur,location,condition,description,created_at,image_urls,blur_data_urls,video_url,owner_id,make,model,year,engine_cc,engine_type,transmission,mileage_km,vin,rejection_reason,status,wheel_diameter,wheel_width,bolt_pattern,wheel_offset,center_bore,wheel_quantity,wheel_brand,wheel_material,wheel_style")
+    .select("id,title,category,price_eur,location,condition,description,created_at,image_urls,blur_data_urls,video_url,owner_id,make,model,year,engine_cc,engine_type,transmission,mileage_km,vin,rejection_reason,status,wheel_diameter,wheel_width,bolt_pattern,wheel_offset,center_bore,wheel_quantity,wheel_brand,wheel_material,wheel_style,boosted_until,featured_until")
     .eq("id", id)
     .maybeSingle();
 
@@ -579,7 +583,16 @@ export default async function ListingDetailPage({
               </div>
             )}
             {isOwner ? (
-              <SellerControls listingId={listing.id} status={listing.status ?? null} />
+              <>
+                <SellerControls listingId={listing.id} status={listing.status ?? null} />
+                {listing.status === "active" && (
+                  <PromotionCard
+                    listingId={listing.id}
+                    boostedUntil={listing.boosted_until ?? null}
+                    featuredUntil={listing.featured_until ?? null}
+                  />
+                )}
+              </>
             ) : isSold ? (
               <div className="card" style={{ padding: 16, display: "grid", gap: 8 }}>
                 <div style={{ fontWeight: 950, color: "var(--green-900)" }}>

@@ -12,15 +12,15 @@ export default async function Home() {
   } = await supabase.auth.getUser();
   const isLoggedIn = !!user;
 
-  // Fetch featured listings
+  // Fetch featured listings (both admin-featured and paid-featured)
   const { data: featured } = await supabase
     .from("listings")
     .select(
-      "id, title, category, price_eur, location, condition, status, image_urls, blur_data_urls, make, model, year, mileage_km, transmission, wheel_diameter, wheel_width, bolt_pattern, wheel_brand, wheel_quantity"
+      "id, title, category, price_eur, location, condition, status, image_urls, blur_data_urls, make, model, year, mileage_km, transmission, wheel_diameter, wheel_width, bolt_pattern, wheel_brand, wheel_quantity, is_featured, featured_until"
     )
-    .eq("is_featured", true)
     .eq("status", "active")
-    .order("featured_at", { ascending: false })
+    .or(`is_featured.eq.true,featured_until.gt.${new Date().toISOString()}`)
+    .order("featured_at", { ascending: false, nullsFirst: false })
     .limit(4);
 
   const featuredListings = featured ?? [];

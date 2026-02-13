@@ -16,6 +16,8 @@ type Listing = {
   view_count: number | null;
   save_count: number | null;
   inquiry_count: number | null;
+  boosted_until: string | null;
+  featured_until: string | null;
 };
 
 type TabType = "active" | "sold" | "pending" | "rejected";
@@ -159,7 +161,10 @@ export default function SellerListingsTabs({ activeTab, counts, listings }: Prop
                     {listing.title?.trim() || "Untitled listing"}
                   </Link>
                   <div style={styles.listingMeta}>{formatListingDate(listing)}</div>
-                  <StatusBadge status={listing.status} />
+                  <div style={styles.badgeRow}>
+                    <StatusBadge status={listing.status} />
+                    <PromotionBadges boostedUntil={listing.boosted_until} featuredUntil={listing.featured_until} />
+                  </div>
                 </div>
                 <div style={styles.listingRight}>
                   <span style={styles.price}>{formatPrice(listing.price_eur)}</span>
@@ -275,6 +280,33 @@ function StatusBadge({ status }: { status: string | null }) {
   const label = labels[status ?? "active"] ?? "Active";
 
   return <span style={{ ...styles.badge, ...badgeStyle }}>{label}</span>;
+}
+
+function PromotionBadges({ boostedUntil, featuredUntil }: { boostedUntil: string | null; featuredUntil: string | null }) {
+  const now = new Date();
+  const isBoosted = boostedUntil && new Date(boostedUntil) > now;
+  const isFeatured = featuredUntil && new Date(featuredUntil) > now;
+
+  if (!isBoosted && !isFeatured) return null;
+
+  const formatDate = (dateStr: string) => {
+    return new Date(dateStr).toLocaleDateString("en-IE", { month: "short", day: "numeric" });
+  };
+
+  return (
+    <>
+      {isBoosted && (
+        <span style={styles.promotionBadge}>
+          Boosted until {formatDate(boostedUntil!)}
+        </span>
+      )}
+      {isFeatured && (
+        <span style={styles.promotionBadge}>
+          Featured until {formatDate(featuredUntil!)}
+        </span>
+      )}
+    </>
+  );
 }
 
 function formatPrice(price: number | null) {
@@ -453,7 +485,23 @@ const styles: Record<string, CSSProperties> = {
     borderRadius: 999,
     fontSize: 12,
     fontWeight: 700,
+  },
+  badgeRow: {
+    display: "flex",
+    flexWrap: "wrap",
+    alignItems: "center",
+    gap: 8,
     marginTop: 8,
+  },
+  promotionBadge: {
+    display: "inline-flex",
+    alignItems: "center",
+    padding: "4px 10px",
+    borderRadius: 999,
+    fontSize: 12,
+    fontWeight: 700,
+    background: "rgba(34, 197, 94, 0.15)",
+    color: "rgb(21, 128, 61)",
   },
   analyticsRow: {
     display: "flex",
