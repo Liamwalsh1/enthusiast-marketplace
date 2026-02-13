@@ -18,6 +18,7 @@ type Listing = {
   inquiry_count: number | null;
   boosted_until: string | null;
   featured_until: string | null;
+  image_urls: string[] | null;
 };
 
 type TabType = "active" | "sold" | "pending" | "rejected";
@@ -156,6 +157,17 @@ export default function SellerListingsTabs({ activeTab, counts, listings }: Prop
                     style={styles.checkbox}
                   />
                 )}
+                <Link href={`/listings/${listing.id}`} style={styles.imageLink}>
+                  {listing.image_urls && listing.image_urls.length > 0 ? (
+                    <img
+                      src={listing.image_urls[0]}
+                      alt={listing.title ?? "Listing image"}
+                      style={styles.listingImage}
+                    />
+                  ) : (
+                    <div style={styles.noImage}>No image</div>
+                  )}
+                </Link>
                 <div style={styles.listingInfo}>
                   <Link href={`/listings/${listing.id}`} style={styles.listingTitle}>
                     {listing.title?.trim() || "Untitled listing"}
@@ -451,6 +463,28 @@ const styles: Record<string, CSSProperties> = {
     display: "flex",
     alignItems: "flex-start",
     gap: 12,
+  },
+  imageLink: {
+    flexShrink: 0,
+  },
+  listingImage: {
+    width: 80,
+    height: 60,
+    objectFit: "cover",
+    borderRadius: 8,
+    background: "var(--soft)",
+  },
+  noImage: {
+    width: 80,
+    height: 60,
+    borderRadius: 8,
+    background: "var(--soft)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: 11,
+    fontWeight: 650,
+    color: "var(--muted)",
   },
   listingInfo: {
     flex: 1,

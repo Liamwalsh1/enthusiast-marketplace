@@ -17,6 +17,7 @@ type ListingRow = {
   inquiry_count: number | null;
   boosted_until: string | null;
   featured_until: string | null;
+  image_urls: string[] | null;
 };
 
 export const dynamic = "force-dynamic";
@@ -94,7 +95,7 @@ export default async function SellerListingsPage({
     error: listingsError,
   } = await supabase
     .from("listings")
-    .select("id,title,price_eur,status,created_at,sold_at,rejection_reason,view_count,save_count,inquiry_count,boosted_until,featured_until")
+    .select("id,title,price_eur,status,created_at,sold_at,rejection_reason,view_count,save_count,inquiry_count,boosted_until,featured_until,image_urls")
     .eq("owner_id", user.id)
     .eq("status", activeTab)
     .order("created_at", { ascending: false });
