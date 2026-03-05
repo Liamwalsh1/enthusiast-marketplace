@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/app/lib/supabase/server";
-import { stripe, BOOST_PRICE_ID, FEATURED_PRICE_ID } from "@/app/lib/stripe";
+import { getStripe, BOOST_PRICE_ID, FEATURED_PRICE_ID } from "@/app/lib/stripe";
 
 export async function POST(request: NextRequest) {
   try {
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
     // Create Stripe checkout session
     const origin = request.headers.get("origin") || "https://passiondriven.ie";
 
-    const session = await stripe.checkout.sessions.create({
+    const session = await getStripe().checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],
       line_items: [

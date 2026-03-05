@@ -1,7 +1,7 @@
 "use client";
 
 import type { FormEvent } from "react";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabaseClient";
@@ -20,7 +20,22 @@ import { optimizeImages, getOptimizedExtension, getOptimizedMimeType } from "../
 
 type Category = "car" | "part" | "memorabilia" | "wheels";
 
+// Wrapper component to handle Suspense for useSearchParams
 export default function SellPage() {
+  return (
+    <Suspense fallback={
+      <main className="container">
+        <section className="card" style={{ padding: 16, marginTop: 20 }}>
+          <div style={{ fontWeight: 900, color: "var(--green-900)" }}>Loading...</div>
+        </section>
+      </main>
+    }>
+      <SellPageContent />
+    </Suspense>
+  );
+}
+
+function SellPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
