@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
+import type { FormEvent } from "react";
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabaseClient";
 import {
@@ -21,8 +22,14 @@ type Category = "car" | "part" | "memorabilia" | "wheels";
 
 export default function SellPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
-  const [category, setCategory] = useState<Category>("car");
+  // Get initial category from URL param, default to "car"
+  const urlCategory = searchParams.get("category") as Category | null;
+  const validCategories: Category[] = ["car", "part", "memorabilia", "wheels"];
+  const initialCategory = urlCategory && validCategories.includes(urlCategory) ? urlCategory : "car";
+
+  const category = initialCategory;
   const [title, setTitle] = useState("");
   const [priceEur, setPriceEur] = useState("");
   const [location, setLocation] = useState("");
@@ -35,11 +42,11 @@ export default function SellPage() {
   const [make, setMake] = useState("");
   const [model, setModel] = useState("");
   const [year, setYear] = useState("");
-  const [engineCc, setEngineCc] = useState("");
-  const [engineType, setEngineType] = useState("");
   const [transmission, setTransmission] = useState("");
   const [mileageKm, setMileageKm] = useState("");
   const [vin, setVin] = useState("");
+  const [isModified, setIsModified] = useState<boolean | null>(null);
+  const [modifications, setModifications] = useState<string[]>([""]);
 
   // Wheel-specific fields
   const [wheelDiameter, setWheelDiameter] = useState("");
@@ -165,10 +172,59 @@ export default function SellPage() {
       return;
     }
 
+    if (files.length === 0) {
+      setErrorMsg("Please add at least one image.");
+      return;
+    }
+
     const priceInt = parsePrice(priceEur);
     if (priceEur.trim() !== "" && priceInt === null) {
       setErrorMsg("Price must be a valid number.");
       return;
+    }
+
+    // Car-specific validation
+    if (category === "car") {
+      if (!make.trim()) {
+        setErrorMsg("Please select a make.");
+        return;
+      }
+      if (!model.trim()) {
+        setErrorMsg("Please select a model.");
+        return;
+      }
+      if (!year.trim()) {
+        setErrorMsg("Please enter the year.");
+        return;
+      }
+      if (!mileageKm.trim()) {
+        setErrorMsg("Please enter the mileage.");
+        return;
+      }
+      if (!transmission) {
+        setErrorMsg("Please select a transmission type.");
+        return;
+      }
+      if (isModified === null) {
+        setErrorMsg("Please indicate if the car has been modified.");
+        return;
+      }
+    }
+
+    // Wheels-specific validation
+    if (category === "wheels") {
+      if (!wheelDiameter) {
+        setErrorMsg("Please select a wheel diameter.");
+        return;
+      }
+      if (!wheelWidth) {
+        setErrorMsg("Please select a wheel width.");
+        return;
+      }
+      if (!wheelQuantity) {
+        setErrorMsg("Please select the quantity.");
+        return;
+      }
     }
 
     setIsSubmitting(true);
@@ -181,7 +237,6 @@ export default function SellPage() {
 
     // Parse car-specific numeric fields
     const yearInt = year.trim() ? parseInt(year.trim(), 10) : null;
-    const engineCcInt = engineCc.trim() ? parseInt(engineCc.trim(), 10) : null;
     const mileageInt = mileageKm.trim() ? parseInt(mileageKm.trim(), 10) : null;
 
     // Build insert payload - only include car specs if category is "car"
@@ -201,11 +256,13 @@ export default function SellPage() {
       insertPayload.make = make.trim() || null;
       insertPayload.model = model.trim() || null;
       insertPayload.year = Number.isFinite(yearInt) ? yearInt : null;
-      insertPayload.engine_cc = Number.isFinite(engineCcInt) ? engineCcInt : null;
-      insertPayload.engine_type = engineType.trim() || null;
       insertPayload.transmission = transmission || null;
       insertPayload.mileage_km = Number.isFinite(mileageInt) ? mileageInt : null;
       insertPayload.vin = vin.trim() || null;
+      insertPayload.is_modified = isModified ?? false;
+      // Filter out empty modifications
+      const filteredMods = modifications.filter((m) => m.trim() !== "");
+      insertPayload.modifications = filteredMods.length > 0 ? filteredMods : null;
     }
 
     if (category === "wheels") {
@@ -285,25 +342,21 @@ export default function SellPage() {
     );
   }
 
+  const categoryLabels: Record<Category, string> = {
+    car: "Car",
+    wheels: "Wheels",
+    part: "Parts",
+    memorabilia: "Memorabilia",
+  };
+
   return (
     <main className="container">
+      <div style={styles.categoryHeading}>{categoryLabels[category]}</div>
       <h1 style={styles.h1}>Post an ad</h1>
 
       <div className="grid-2" style={{ marginTop: 12 }}>
         <section className="card" style={styles.card}>
           <form onSubmit={onSubmit}>
-            <label style={styles.label}>Category</label>
-            <select
-              className="select"
-              value={category}
-              onChange={(e) => setCategory(e.target.value as Category)}
-            >
-              <option value="car">Car</option>
-              <option value="wheels">Wheels</option>
-              <option value="part">Part</option>
-              <option value="memorabilia">Memorabilia</option>
-            </select>
-
             <label style={styles.label}>Title</label>
             <input
               className="input"
@@ -316,7 +369,7 @@ export default function SellPage() {
               <>
                 <div style={styles.sectionHeader}>Vehicle Details</div>
 
-                <div style={styles.twoCol}>
+                <div className="form-two-col">
                   <div>
                     <label style={styles.label}>Make</label>
                     <select
@@ -353,7 +406,7 @@ export default function SellPage() {
                   </div>
                 </div>
 
-                <div style={styles.twoCol}>
+                <div className="form-two-col">
                   <div>
                     <label style={styles.label}>Year</label>
                     <input
@@ -376,28 +429,6 @@ export default function SellPage() {
                   </div>
                 </div>
 
-                <div style={styles.twoCol}>
-                  <div>
-                    <label style={styles.label}>Engine Size (cc)</label>
-                    <input
-                      className="input"
-                      value={engineCc}
-                      onChange={(e) => setEngineCc(e.target.value)}
-                      inputMode="numeric"
-                      placeholder="e.g. 3600"
-                    />
-                  </div>
-                  <div>
-                    <label style={styles.label}>Engine Type</label>
-                    <input
-                      className="input"
-                      value={engineType}
-                      onChange={(e) => setEngineType(e.target.value)}
-                      placeholder="e.g. Flat-6"
-                    />
-                  </div>
-                </div>
-
                 <label style={styles.label}>Transmission</label>
                 <select
                   className="select"
@@ -407,10 +438,75 @@ export default function SellPage() {
                   <option value="">Select...</option>
                   <option value="Manual">Manual</option>
                   <option value="Automatic">Automatic</option>
-                  <option value="Semi-Automatic">Semi-Automatic</option>
-                  <option value="CVT">CVT</option>
-                  <option value="Other">Other</option>
                 </select>
+
+                <label style={styles.label}>Any modifications made?</label>
+                <div style={styles.radioGroup}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsModified(false);
+                      setModifications([""]);
+                    }}
+                    style={{
+                      ...styles.radioOption,
+                      ...(isModified === false ? styles.radioOptionSelected : {}),
+                    }}
+                  >
+                    No, it's stock
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsModified(true)}
+                    style={{
+                      ...styles.radioOption,
+                      ...(isModified === true ? styles.radioOptionSelected : {}),
+                    }}
+                  >
+                    Yes
+                  </button>
+                </div>
+
+                {isModified && (
+                  <div style={styles.modificationsSection}>
+                    <label style={styles.label}>List modifications</label>
+                    {modifications.map((mod, index) => (
+                      <div key={index} style={styles.modificationRow}>
+                        <span style={styles.bullet}>•</span>
+                        <input
+                          className="input"
+                          value={mod}
+                          onChange={(e) => {
+                            const newMods = [...modifications];
+                            newMods[index] = e.target.value;
+                            setModifications(newMods);
+                          }}
+                          placeholder="e.g. Coilovers, exhaust, ECU tune..."
+                          style={{ flex: 1 }}
+                        />
+                        {modifications.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newMods = modifications.filter((_, i) => i !== index);
+                              setModifications(newMods);
+                            }}
+                            style={styles.removeBtn}
+                          >
+                            ×
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => setModifications([...modifications, ""])}
+                      style={styles.addModBtn}
+                    >
+                      + Add another
+                    </button>
+                  </div>
+                )}
 
                 <label style={styles.label}>VIN (optional)</label>
                 <input
@@ -427,7 +523,7 @@ export default function SellPage() {
               <>
                 <div style={styles.sectionHeader}>Wheel Specifications</div>
 
-                <div style={styles.twoCol}>
+                <div className="form-two-col">
                   <div>
                     <label style={styles.label}>Brand</label>
                     <select
@@ -454,7 +550,7 @@ export default function SellPage() {
                   </div>
                 </div>
 
-                <div style={styles.twoCol}>
+                <div className="form-two-col">
                   <div>
                     <label style={styles.label}>Diameter (inches)</label>
                     <select
@@ -487,7 +583,7 @@ export default function SellPage() {
                   </div>
                 </div>
 
-                <div style={styles.twoCol}>
+                <div className="form-two-col">
                   <div>
                     <label style={styles.label}>Bolt Pattern (PCD)</label>
                     <select
@@ -515,7 +611,7 @@ export default function SellPage() {
                   </div>
                 </div>
 
-                <div style={styles.twoCol}>
+                <div className="form-two-col">
                   <div>
                     <label style={styles.label}>Center Bore (mm)</label>
                     <input
@@ -667,6 +763,14 @@ export default function SellPage() {
 }
 
 const styles: Record<string, React.CSSProperties> = {
+  categoryHeading: {
+    fontSize: 16,
+    fontWeight: 700,
+    color: "var(--green-900)",
+    textDecoration: "underline",
+    textUnderlineOffset: 4,
+    marginBottom: 4,
+  },
   h1: { fontSize: 34, fontWeight: 950, color: "var(--green-900)" },
   card: { padding: 16 },
   label: { marginTop: 10, fontWeight: 800, display: "block", color: "var(--green-900)" },
@@ -687,9 +791,70 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 16,
     color: "var(--green-900)",
   },
-  twoCol: {
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr",
-    gap: 12,
+  radioGroup: {
+    display: "flex",
+    gap: 10,
+    marginTop: 8,
+  },
+  radioOption: {
+    flex: 1,
+    padding: "12px 16px",
+    borderRadius: 10,
+    borderWidth: 1,
+    borderStyle: "solid",
+    borderColor: "var(--border)",
+    background: "white",
+    fontWeight: 650,
+    fontSize: 14,
+    color: "var(--green-900)",
+    cursor: "pointer",
+    transition: "all 0.15s ease",
+  },
+  radioOptionSelected: {
+    background: "var(--green-900)",
+    borderColor: "var(--green-900)",
+    color: "white",
+  },
+  modificationsSection: {
+    marginTop: 8,
+    padding: 12,
+    background: "var(--soft)",
+    borderRadius: 10,
+  },
+  modificationRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 8,
+  },
+  bullet: {
+    color: "var(--green-900)",
+    fontWeight: 900,
+    fontSize: 18,
+  },
+  removeBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 6,
+    border: "none",
+    background: "rgba(220, 38, 38, 0.1)",
+    color: "rgb(220, 38, 38)",
+    fontWeight: 700,
+    fontSize: 18,
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  addModBtn: {
+    marginTop: 10,
+    padding: "8px 12px",
+    borderRadius: 8,
+    border: "1px dashed var(--border)",
+    background: "transparent",
+    fontWeight: 650,
+    fontSize: 13,
+    color: "var(--green-900)",
+    cursor: "pointer",
   },
 };

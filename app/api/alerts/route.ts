@@ -48,6 +48,13 @@ export async function POST(request: Request) {
     location?: string;
     transmission?: string;
     email_notifications?: boolean;
+    // Extended filters
+    mileage_min?: number;
+    mileage_max?: number;
+    wheel_brand?: string;
+    wheel_diameter?: number;
+    bolt_pattern?: string;
+    search_text?: string;
   };
 
   try {
@@ -63,7 +70,7 @@ export async function POST(request: Request) {
   }
 
   // Validate category if provided
-  const validCategories = ["car", "part", "memorabilia"];
+  const validCategories = ["car", "part", "memorabilia", "wheels"];
   if (body.category && !validCategories.includes(body.category)) {
     return NextResponse.json({ error: "Invalid category" }, { status: 400 });
   }
@@ -83,6 +90,13 @@ export async function POST(request: Request) {
       location: body.location?.trim() || null,
       transmission: body.transmission?.trim() || null,
       email_notifications: body.email_notifications ?? true,
+      // Extended filters
+      mileage_min: body.mileage_min || null,
+      mileage_max: body.mileage_max || null,
+      wheel_brand: body.wheel_brand?.trim() || null,
+      wheel_diameter: body.wheel_diameter || null,
+      bolt_pattern: body.bolt_pattern?.trim() || null,
+      search_text: body.search_text?.trim() || null,
     })
     .select("*")
     .single();

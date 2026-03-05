@@ -3,10 +3,10 @@
 import { FormEvent, useState, type CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/app/components/useToast";
-import { IRISH_COUNTIES, CAR_MAKES, CAR_MODELS_BY_MAKE } from "@/app/lib/constants";
+import { IRISH_COUNTIES, CAR_MAKES, CAR_MODELS_BY_MAKE, WHEEL_BRANDS, WHEEL_DIAMETERS, BOLT_PATTERNS } from "@/app/lib/constants";
 import { ensureServerSession } from "@/app/lib/auth/ensureServerSession";
 
-type Category = "car" | "part" | "memorabilia" | "";
+type Category = "car" | "part" | "memorabilia" | "wheels" | "";
 
 export default function CreateAlertForm() {
   const router = useRouter();
@@ -22,6 +22,11 @@ export default function CreateAlertForm() {
   const [priceMax, setPriceMax] = useState("");
   const [location, setLocation] = useState("");
   const [transmission, setTransmission] = useState("");
+  const [mileageMin, setMileageMin] = useState("");
+  const [mileageMax, setMileageMax] = useState("");
+  const [wheelBrand, setWheelBrand] = useState("");
+  const [wheelDiameter, setWheelDiameter] = useState("");
+  const [boltPattern, setBoltPattern] = useState("");
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [loading, setLoading] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -59,6 +64,11 @@ export default function CreateAlertForm() {
           price_max: priceMax ? parseInt(priceMax, 10) : null,
           location: location || null,
           transmission: transmission || null,
+          mileage_min: mileageMin ? parseInt(mileageMin, 10) : null,
+          mileage_max: mileageMax ? parseInt(mileageMax, 10) : null,
+          wheel_brand: wheelBrand || null,
+          wheel_diameter: wheelDiameter ? parseFloat(wheelDiameter) : null,
+          bolt_pattern: boltPattern || null,
           email_notifications: emailNotifications,
         }),
       });
@@ -82,6 +92,11 @@ export default function CreateAlertForm() {
       setPriceMax("");
       setLocation("");
       setTransmission("");
+      setMileageMin("");
+      setMileageMax("");
+      setWheelBrand("");
+      setWheelDiameter("");
+      setBoltPattern("");
       setEmailNotifications(true);
       setExpanded(false);
 
@@ -129,6 +144,7 @@ export default function CreateAlertForm() {
           >
             <option value="">All categories</option>
             <option value="car">Car</option>
+            <option value="wheels">Wheels</option>
             <option value="part">Part</option>
             <option value="memorabilia">Memorabilia</option>
           </select>
@@ -256,6 +272,88 @@ export default function CreateAlertForm() {
               </select>
             </div>
           </div>
+
+          {/* Car-specific: Mileage */}
+          {(category === "" || category === "car") && (
+            <div style={styles.row}>
+              <div style={styles.field}>
+                <label style={styles.label}>Mileage min (km)</label>
+                <input
+                  className="input"
+                  type="number"
+                  value={mileageMin}
+                  onChange={(e) => setMileageMin(e.target.value)}
+                  placeholder="e.g. 0"
+                  disabled={loading}
+                />
+              </div>
+              <div style={styles.field}>
+                <label style={styles.label}>Mileage max (km)</label>
+                <input
+                  className="input"
+                  type="number"
+                  value={mileageMax}
+                  onChange={(e) => setMileageMax(e.target.value)}
+                  placeholder="e.g. 100000"
+                  disabled={loading}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Wheel-specific filters */}
+          {(category === "" || category === "wheels") && (
+            <div style={styles.row}>
+              <div style={styles.field}>
+                <label style={styles.label}>Wheel Brand</label>
+                <select
+                  className="select"
+                  value={wheelBrand}
+                  onChange={(e) => setWheelBrand(e.target.value)}
+                  disabled={loading}
+                >
+                  <option value="">All brands</option>
+                  {WHEEL_BRANDS.map((brand) => (
+                    <option key={brand} value={brand}>
+                      {brand}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div style={styles.field}>
+                <label style={styles.label}>Diameter</label>
+                <select
+                  className="select"
+                  value={wheelDiameter}
+                  onChange={(e) => setWheelDiameter(e.target.value)}
+                  disabled={loading}
+                >
+                  <option value="">All sizes</option>
+                  {WHEEL_DIAMETERS.map((d) => (
+                    <option key={d} value={d}>
+                      {d}&quot;
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div style={styles.field}>
+                <label style={styles.label}>Bolt Pattern</label>
+                <select
+                  className="select"
+                  value={boltPattern}
+                  onChange={(e) => setBoltPattern(e.target.value)}
+                  disabled={loading}
+                >
+                  <option value="">All patterns</option>
+                  {BOLT_PATTERNS.map((bp) => (
+                    <option key={bp} value={bp}>
+                      {bp}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
 
           <div>
             <label style={styles.checkboxLabel}>

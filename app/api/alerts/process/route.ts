@@ -19,6 +19,13 @@ type SearchAlert = {
   is_active: boolean;
   email_notifications: boolean;
   last_checked_at: string | null;
+  // Extended filters
+  mileage_min: number | null;
+  mileage_max: number | null;
+  wheel_brand: string | null;
+  wheel_diameter: number | null;
+  bolt_pattern: string | null;
+  search_text: string | null;
 };
 
 type Listing = {
@@ -32,6 +39,11 @@ type Listing = {
   location: string | null;
   transmission: string | null;
   created_at: string;
+  // Extended fields
+  mileage_km: number | null;
+  wheel_brand: string | null;
+  wheel_diameter: number | null;
+  bolt_pattern: string | null;
 };
 
 // Check if a listing matches an alert's criteria
@@ -77,6 +89,45 @@ function listingMatchesAlert(listing: Listing, alert: SearchAlert): boolean {
     return false;
   }
 
+  // Mileage range (for cars)
+  if (alert.mileage_min && (listing.mileage_km === null || listing.mileage_km < alert.mileage_min)) {
+    return false;
+  }
+  if (alert.mileage_max && (listing.mileage_km === null || listing.mileage_km > alert.mileage_max)) {
+    return false;
+  }
+
+  // Wheel brand must match if specified (case-insensitive)
+  if (alert.wheel_brand && listing.wheel_brand?.toLowerCase() !== alert.wheel_brand.toLowerCase()) {
+    return false;
+  }
+
+  // Wheel diameter must match if specified
+  if (alert.wheel_diameter && listing.wheel_diameter !== alert.wheel_diameter) {
+    return false;
+  }
+
+  // Bolt pattern must match if specified
+  if (alert.bolt_pattern && listing.bolt_pattern !== alert.bolt_pattern) {
+    return false;
+  }
+
+  // Search text - check if title contains the search text (case-insensitive)
+  if (alert.search_text) {
+    const searchLower = alert.search_text.toLowerCase();
+    const titleLower = listing.title.toLowerCase();
+    const makeLower = listing.make?.toLowerCase() ?? "";
+    const modelLower = listing.model?.toLowerCase() ?? "";
+    const wheelBrandLower = listing.wheel_brand?.toLowerCase() ?? "";
+
+    if (!titleLower.includes(searchLower) &&
+        !makeLower.includes(searchLower) &&
+        !modelLower.includes(searchLower) &&
+        !wheelBrandLower.includes(searchLower)) {
+      return false;
+    }
+  }
+
   return true;
 }
 
@@ -110,7 +161,7 @@ export async function GET() {
   // Get all active listings
   const { data: listings, error: listingsError } = await supabase
     .from("listings")
-    .select("id, title, category, make, model, year, price_eur, location, transmission, created_at")
+    .select("id, title, category, make, model, year, price_eur, location, transmission, created_at, mileage_km, wheel_brand, wheel_diameter, bolt_pattern")
     .eq("status", "active")
     .order("created_at", { ascending: false });
 

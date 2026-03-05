@@ -27,11 +27,11 @@ type Props = {
   initialMake: string;
   initialModel: string;
   initialYear: number | null;
-  initialEngineCc: number | null;
-  initialEngineType: string;
   initialTransmission: string;
   initialMileageKm: number | null;
   initialVin: string;
+  initialIsModified: boolean | null;
+  initialModifications: string[];
   initialImageUrls: string[];
   initialVideoUrl: string | null;
   // Wheel-specific props
@@ -57,11 +57,11 @@ export default function EditListingForm({
   initialMake,
   initialModel,
   initialYear,
-  initialEngineCc,
-  initialEngineType,
   initialTransmission,
   initialMileageKm,
   initialVin,
+  initialIsModified,
+  initialModifications,
   initialImageUrls,
   initialVideoUrl,
   initialWheelDiameter,
@@ -87,11 +87,13 @@ export default function EditListingForm({
   const [make, setMake] = useState(initialMake);
   const [model, setModel] = useState(initialModel);
   const [year, setYear] = useState(initialYear?.toString() ?? "");
-  const [engineCc, setEngineCc] = useState(initialEngineCc?.toString() ?? "");
-  const [engineType, setEngineType] = useState(initialEngineType);
   const [transmission, setTransmission] = useState(initialTransmission);
   const [mileageKm, setMileageKm] = useState(initialMileageKm?.toString() ?? "");
   const [vin, setVin] = useState(initialVin);
+  const [isModified, setIsModified] = useState<boolean | null>(initialIsModified);
+  const [modifications, setModifications] = useState<string[]>(
+    initialModifications.length > 0 ? initialModifications : [""]
+  );
 
   // Wheel-specific fields
   const [wheelDiameter, setWheelDiameter] = useState(initialWheelDiameter?.toString() ?? "");
@@ -107,8 +109,11 @@ export default function EditListingForm({
   // Image management
   const [existingImages, setExistingImages] = useState<string[]>(initialImageUrls);
   const [newFiles, setNewFiles] = useState<File[]>([]);
+  const [newFilePreviews, setNewFilePreviews] = useState<string[]>([]);
   const [deletingImage, setDeletingImage] = useState<string | null>(null);
   const [uploadingImages, setUploadingImages] = useState(false);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [savingOrder, setSavingOrder] = useState(false);
 
   // Video management
   const [existingVideoUrl, setExistingVideoUrl] = useState<string | null>(initialVideoUrl);
@@ -185,6 +190,65 @@ export default function EditListingForm({
     setDeletingVideo(false);
   }
 
+  // Drag and drop handlers for image reordering
+  function handleDragStart(index: number) {
+    setDraggedIndex(index);
+  }
+
+  function handleDragOver(e: React.DragEvent) {
+    e.preventDefault();
+  }
+
+  function handleDrop(targetIndex: number) {
+    if (draggedIndex === null || draggedIndex === targetIndex) {
+      setDraggedIndex(null);
+      return;
+    }
+
+    const newOrder = [...existingImages];
+    const [draggedItem] = newOrder.splice(draggedIndex, 1);
+    newOrder.splice(targetIndex, 0, draggedItem);
+    setExistingImages(newOrder);
+    setDraggedIndex(null);
+  }
+
+  function handleDragEnd() {
+    setDraggedIndex(null);
+  }
+
+  async function handleSaveImageOrder() {
+    setSavingOrder(true);
+    const { error } = await supabase
+      .from("listings")
+      .update({ image_urls: existingImages })
+      .eq("id", listingId);
+
+    if (error) {
+      toast({ type: "error", message: "Failed to save image order" });
+    } else {
+      toast({ type: "success", message: "Image order saved" });
+    }
+    setSavingOrder(false);
+  }
+
+  // Generate previews for new files
+  function handleNewFilesChange(selectedFiles: File[]) {
+    const availableSlots = 5 - totalImageCount;
+    const filesToAdd = selectedFiles.slice(0, availableSlots);
+
+    // Create preview URLs for new files
+    const newPreviews = filesToAdd.map((file) => URL.createObjectURL(file));
+    setNewFilePreviews((prev) => [...prev, ...newPreviews]);
+    setNewFiles((prev) => [...prev, ...filesToAdd]);
+  }
+
+  function handleRemoveNewFile(index: number) {
+    // Revoke the preview URL to free memory
+    URL.revokeObjectURL(newFilePreviews[index]);
+    setNewFilePreviews((prev) => prev.filter((_, i) => i !== index));
+    setNewFiles((prev) => prev.filter((_, i) => i !== index));
+  }
+
   async function uploadNewVideo(): Promise<string | null> {
     if (!newVideoFile) return null;
 
@@ -254,17 +318,17 @@ export default function EditListingForm({
     // Add car-specific fields if category is "car"
     if (category === "car") {
       const yearInt = year.trim() ? parseInt(year.trim(), 10) : null;
-      const engineCcInt = engineCc.trim() ? parseInt(engineCc.trim(), 10) : null;
       const mileageInt = mileageKm.trim() ? parseInt(mileageKm.trim(), 10) : null;
 
       updatePayload.make = make.trim() || null;
       updatePayload.model = model.trim() || null;
       updatePayload.year = Number.isFinite(yearInt) ? yearInt : null;
-      updatePayload.engine_cc = Number.isFinite(engineCcInt) ? engineCcInt : null;
-      updatePayload.engine_type = engineType.trim() || null;
       updatePayload.transmission = transmission || null;
       updatePayload.mileage_km = Number.isFinite(mileageInt) ? mileageInt : null;
       updatePayload.vin = vin.trim() || null;
+      updatePayload.is_modified = isModified ?? false;
+      const filteredMods = modifications.filter((m) => m.trim() !== "");
+      updatePayload.modifications = filteredMods.length > 0 ? filteredMods : null;
     }
 
     // Add wheel-specific fields if category is "wheels"
@@ -361,7 +425,7 @@ export default function EditListingForm({
         <>
           <div style={sectionHeader}>Vehicle Details</div>
 
-          <div style={twoCol}>
+          <div className="form-two-col">
             <div>
               <label style={labelStyle}>Make</label>
               <select
@@ -399,7 +463,7 @@ export default function EditListingForm({
             </div>
           </div>
 
-          <div style={twoCol}>
+          <div className="form-two-col">
             <div>
               <label style={labelStyle}>Year</label>
               <input
@@ -424,30 +488,6 @@ export default function EditListingForm({
             </div>
           </div>
 
-          <div style={twoCol}>
-            <div>
-              <label style={labelStyle}>Engine Size (cc)</label>
-              <input
-                className="input"
-                value={engineCc}
-                onChange={(e) => setEngineCc(e.target.value)}
-                inputMode="numeric"
-                placeholder="e.g. 3600"
-                disabled={loading}
-              />
-            </div>
-            <div>
-              <label style={labelStyle}>Engine Type</label>
-              <input
-                className="input"
-                value={engineType}
-                onChange={(e) => setEngineType(e.target.value)}
-                placeholder="e.g. Flat-6"
-                disabled={loading}
-              />
-            </div>
-          </div>
-
           <label style={labelStyle}>Transmission</label>
           <select
             className="select"
@@ -458,10 +498,80 @@ export default function EditListingForm({
             <option value="">Select...</option>
             <option value="Manual">Manual</option>
             <option value="Automatic">Automatic</option>
-            <option value="Semi-Automatic">Semi-Automatic</option>
-            <option value="CVT">CVT</option>
-            <option value="Other">Other</option>
           </select>
+
+          <label style={labelStyle}>Any modifications made?</label>
+          <div style={radioGroup}>
+            <button
+              type="button"
+              onClick={() => {
+                setIsModified(false);
+                setModifications([""]);
+              }}
+              disabled={loading}
+              style={{
+                ...radioOption,
+                ...(isModified === false ? radioOptionSelected : {}),
+              }}
+            >
+              No, it's stock
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsModified(true)}
+              disabled={loading}
+              style={{
+                ...radioOption,
+                ...(isModified === true ? radioOptionSelected : {}),
+              }}
+            >
+              Yes
+            </button>
+          </div>
+
+          {isModified && (
+            <div style={modificationsSection}>
+              <label style={labelStyle}>List modifications</label>
+              {modifications.map((mod, index) => (
+                <div key={index} style={modificationRow}>
+                  <span style={bulletStyle}>•</span>
+                  <input
+                    className="input"
+                    value={mod}
+                    onChange={(e) => {
+                      const newMods = [...modifications];
+                      newMods[index] = e.target.value;
+                      setModifications(newMods);
+                    }}
+                    placeholder="e.g. Coilovers, exhaust, ECU tune..."
+                    style={{ flex: 1 }}
+                    disabled={loading}
+                  />
+                  {modifications.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newMods = modifications.filter((_, i) => i !== index);
+                        setModifications(newMods);
+                      }}
+                      disabled={loading}
+                      style={removeModBtn}
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => setModifications([...modifications, ""])}
+                disabled={loading}
+                style={addModBtn}
+              >
+                + Add another
+              </button>
+            </div>
+          )}
 
           <label style={labelStyle}>VIN (optional)</label>
           <input
@@ -479,7 +589,7 @@ export default function EditListingForm({
         <>
           <div style={sectionHeader}>Wheel Specifications</div>
 
-          <div style={twoCol}>
+          <div className="form-two-col">
             <div>
               <label style={labelStyle}>Brand</label>
               <select
@@ -508,7 +618,7 @@ export default function EditListingForm({
             </div>
           </div>
 
-          <div style={twoCol}>
+          <div className="form-two-col">
             <div>
               <label style={labelStyle}>Diameter (inches)</label>
               <select
@@ -543,7 +653,7 @@ export default function EditListingForm({
             </div>
           </div>
 
-          <div style={twoCol}>
+          <div className="form-two-col">
             <div>
               <label style={labelStyle}>Bolt Pattern (PCD)</label>
               <select
@@ -573,7 +683,7 @@ export default function EditListingForm({
             </div>
           </div>
 
-          <div style={twoCol}>
+          <div className="form-two-col">
             <div>
               <label style={labelStyle}>Center Bore (mm)</label>
               <input
@@ -657,49 +767,83 @@ export default function EditListingForm({
       {/* Image Management Section */}
       <div style={sectionHeader}>Photos</div>
 
-      {/* Existing Images */}
+      {/* Existing Images with Drag & Drop Reordering */}
       {existingImages.length > 0 && (
-        <div style={imageGridStyle}>
-          {existingImages.map((url, index) => (
-            <div key={url} style={imageItemStyle}>
-              <img
-                src={url}
-                alt={`Listing image ${index + 1}`}
-                style={imageThumbnailStyle}
-              />
-              <button
-                type="button"
-                onClick={() => handleDeleteImage(url)}
-                disabled={loading || deletingImage === url}
-                style={deleteButtonStyle}
-                title="Delete image"
+        <>
+          <div style={dragHintStyle}>Drag images to reorder. First image is the cover photo.</div>
+          <div style={imageGridStyle}>
+            {existingImages.map((url, index) => (
+              <div
+                key={url}
+                draggable
+                onDragStart={() => handleDragStart(index)}
+                onDragOver={handleDragOver}
+                onDrop={() => handleDrop(index)}
+                onDragEnd={handleDragEnd}
+                style={{
+                  ...imageItemStyle,
+                  ...(draggedIndex === index ? draggedImageStyle : {}),
+                  cursor: "grab",
+                }}
               >
-                {deletingImage === url ? "…" : "×"}
-              </button>
-            </div>
-          ))}
-        </div>
+                {index === 0 && <div style={coverBadgeStyle}>Cover</div>}
+                <div style={dragHandleStyle}>⋮⋮</div>
+                <img
+                  src={url}
+                  alt={`Listing image ${index + 1}`}
+                  style={imageThumbnailStyle}
+                  draggable={false}
+                />
+                <button
+                  type="button"
+                  onClick={() => handleDeleteImage(url)}
+                  disabled={loading || deletingImage === url}
+                  style={deleteButtonStyle}
+                  title="Delete image"
+                >
+                  {deletingImage === url ? "…" : "×"}
+                </button>
+              </div>
+            ))}
+          </div>
+          {existingImages.length > 1 && (
+            <button
+              type="button"
+              onClick={handleSaveImageOrder}
+              disabled={loading || savingOrder}
+              style={saveOrderButtonStyle}
+            >
+              {savingOrder ? "Saving..." : "Save image order"}
+            </button>
+          )}
+        </>
       )}
 
       {existingImages.length === 0 && newFiles.length === 0 && (
         <div style={noImagesStyle}>No photos yet</div>
       )}
 
-      {/* New Images Preview */}
+      {/* New Images Preview with Thumbnails */}
       {newFiles.length > 0 && (
         <div style={{ marginTop: existingImages.length > 0 ? 12 : 0 }}>
           <div style={smallTextStyle}>{newFiles.length} new photo(s) to upload:</div>
-          <div style={newFilesListStyle}>
-            {newFiles.map((file, index) => (
-              <div key={index} style={newFileItemStyle}>
-                <span style={fileNameStyle}>{file.name}</span>
+          <div style={imageGridStyle}>
+            {newFiles.map((_, index) => (
+              <div key={index} style={{ ...imageItemStyle, ...newImageItemStyle }}>
+                <div style={newBadgeStyle}>New</div>
+                <img
+                  src={newFilePreviews[index] || ""}
+                  alt={`New image ${index + 1}`}
+                  style={imageThumbnailStyle}
+                />
                 <button
                   type="button"
-                  onClick={() => setNewFiles((prev) => prev.filter((_, i) => i !== index))}
+                  onClick={() => handleRemoveNewFile(index)}
                   disabled={loading}
-                  style={removeFileButtonStyle}
+                  style={deleteButtonStyle}
+                  title="Remove"
                 >
-                  Remove
+                  ×
                 </button>
               </div>
             ))}
@@ -721,10 +865,8 @@ export default function EditListingForm({
             disabled={loading || uploadingImages}
             onChange={(e) => {
               const selectedFiles = Array.from(e.target.files ?? []);
-              const availableSlots = 5 - totalImageCount;
-              const filesToAdd = selectedFiles.slice(0, availableSlots);
-              setNewFiles((prev) => [...prev, ...filesToAdd]);
-              e.target.value = ""; // Reset input to allow selecting same file again
+              handleNewFilesChange(selectedFiles);
+              e.target.value = "";
             }}
           />
         </div>
@@ -900,12 +1042,6 @@ const smallTextStyle: CSSProperties = {
   fontSize: 13,
 };
 
-const newFilesListStyle: CSSProperties = {
-  marginTop: 8,
-  display: "grid",
-  gap: 6,
-};
-
 const newFileItemStyle: CSSProperties = {
   display: "flex",
   alignItems: "center",
@@ -952,4 +1088,151 @@ const removeVideoButtonStyle: CSSProperties = {
   fontSize: 13,
   cursor: "pointer",
   justifySelf: "start",
+};
+
+// Drag and drop styles
+const dragHintStyle: CSSProperties = {
+  fontSize: 12,
+  color: "var(--muted)",
+  fontWeight: 600,
+  marginBottom: 8,
+};
+
+const draggedImageStyle: CSSProperties = {
+  opacity: 0.5,
+  border: "2px dashed var(--green-900)",
+};
+
+const coverBadgeStyle: CSSProperties = {
+  position: "absolute",
+  top: 4,
+  left: 4,
+  padding: "2px 6px",
+  borderRadius: 4,
+  background: "var(--green-900)",
+  color: "#fff",
+  fontSize: 10,
+  fontWeight: 700,
+  textTransform: "uppercase",
+  zIndex: 1,
+};
+
+const dragHandleStyle: CSSProperties = {
+  position: "absolute",
+  bottom: 4,
+  left: "50%",
+  transform: "translateX(-50%)",
+  padding: "2px 8px",
+  borderRadius: 4,
+  background: "rgba(0,0,0,0.5)",
+  color: "#fff",
+  fontSize: 12,
+  fontWeight: 700,
+  zIndex: 1,
+  letterSpacing: -2,
+};
+
+const saveOrderButtonStyle: CSSProperties = {
+  marginTop: 8,
+  padding: "8px 16px",
+  borderRadius: 8,
+  border: "1px solid var(--green-900)",
+  background: "transparent",
+  color: "var(--green-900)",
+  fontWeight: 700,
+  fontSize: 13,
+  cursor: "pointer",
+};
+
+const newImageItemStyle: CSSProperties = {
+  border: "2px solid rgba(34, 197, 94, 0.5)",
+};
+
+const newBadgeStyle: CSSProperties = {
+  position: "absolute",
+  top: 4,
+  left: 4,
+  padding: "2px 6px",
+  borderRadius: 4,
+  background: "rgba(34, 197, 94, 0.9)",
+  color: "#fff",
+  fontSize: 10,
+  fontWeight: 700,
+  textTransform: "uppercase",
+  zIndex: 1,
+};
+
+// Modifications styles
+const radioGroup: CSSProperties = {
+  display: "flex",
+  gap: 10,
+  marginTop: 8,
+};
+
+const radioOption: CSSProperties = {
+  flex: 1,
+  padding: "12px 16px",
+  borderRadius: 10,
+  borderWidth: 1,
+  borderStyle: "solid",
+  borderColor: "var(--border)",
+  background: "white",
+  fontWeight: 650,
+  fontSize: 14,
+  color: "var(--green-900)",
+  cursor: "pointer",
+  transition: "all 0.15s ease",
+};
+
+const radioOptionSelected: CSSProperties = {
+  background: "var(--green-900)",
+  borderColor: "var(--green-900)",
+  color: "white",
+};
+
+const modificationsSection: CSSProperties = {
+  marginTop: 8,
+  padding: 12,
+  background: "var(--soft)",
+  borderRadius: 10,
+};
+
+const modificationRow: CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: 8,
+  marginTop: 8,
+};
+
+const bulletStyle: CSSProperties = {
+  color: "var(--green-900)",
+  fontWeight: 900,
+  fontSize: 18,
+};
+
+const removeModBtn: CSSProperties = {
+  width: 28,
+  height: 28,
+  borderRadius: 6,
+  border: "none",
+  background: "rgba(220, 38, 38, 0.1)",
+  color: "rgb(220, 38, 38)",
+  fontWeight: 700,
+  fontSize: 18,
+  cursor: "pointer",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+};
+
+const addModBtn: CSSProperties = {
+  marginTop: 10,
+  padding: "8px 12px",
+  borderRadius: 8,
+  border: "1px dashed var(--border)",
+  background: "transparent",
+  fontWeight: 650,
+  fontSize: 13,
+  color: "var(--green-900)",
+  cursor: "pointer",
 };

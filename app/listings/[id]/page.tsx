@@ -103,11 +103,11 @@ type Listing = {
   make?: string | null;
   model?: string | null;
   year?: number | null;
-  engine_cc?: number | null;
-  engine_type?: string | null;
   transmission?: string | null;
   mileage_km?: number | null;
   vin?: string | null;
+  is_modified?: boolean | null;
+  modifications?: string[] | null;
   // Wheel-specific fields
   wheel_diameter?: number | null;
   wheel_width?: number | null;
@@ -146,11 +146,6 @@ function formatMileage(km: number | null | undefined) {
   return new Intl.NumberFormat("en-IE").format(km) + " km";
 }
 
-function formatEngineSize(cc: number | null | undefined) {
-  if (cc === null || cc === undefined) return null;
-  return new Intl.NumberFormat("en-IE").format(cc) + " cc";
-}
-
 // getListing now uses the Supabase client passed in to respect RLS policies
 async function getListing(
   id: string,
@@ -161,7 +156,7 @@ async function getListing(
 }> {
   const { data, error } = await supabase
     .from("listings")
-    .select("id,title,category,price_eur,location,condition,description,created_at,image_urls,blur_data_urls,video_url,owner_id,make,model,year,engine_cc,engine_type,transmission,mileage_km,vin,rejection_reason,status,wheel_diameter,wheel_width,bolt_pattern,wheel_offset,center_bore,wheel_quantity,wheel_brand,wheel_material,wheel_style,boosted_until,featured_until")
+    .select("id,title,category,price_eur,location,condition,description,created_at,image_urls,blur_data_urls,video_url,owner_id,make,model,year,transmission,mileage_km,vin,is_modified,modifications,rejection_reason,status,wheel_diameter,wheel_width,bolt_pattern,wheel_offset,center_bore,wheel_quantity,wheel_brand,wheel_material,wheel_style,boosted_until,featured_until")
     .eq("id", id)
     .maybeSingle();
 
@@ -381,7 +376,7 @@ export default async function ListingDetailPage({
               {formatPrice(listing.price_eur)}
             </div>
 
-            {listing.category === "car" && (listing.make || listing.model || listing.year || listing.mileage_km || listing.engine_cc || listing.transmission) && (
+            {listing.category === "car" && (listing.make || listing.model || listing.year || listing.mileage_km || listing.transmission) && (
               <div style={{ marginTop: 16 }}>
                 <div
                   style={{
@@ -417,15 +412,6 @@ export default async function ListingDetailPage({
                       <div style={specValueStyle}>{formatMileage(listing.mileage_km)}</div>
                     </div>
                   )}
-                  {listing.engine_cc && (
-                    <div style={specItemStyle}>
-                      <div style={specLabelStyle}>Engine</div>
-                      <div style={specValueStyle}>
-                        {formatEngineSize(listing.engine_cc)}
-                        {listing.engine_type ? ` ${listing.engine_type}` : ""}
-                      </div>
-                    </div>
-                  )}
                   {listing.transmission && (
                     <div style={specItemStyle}>
                       <div style={specLabelStyle}>Transmission</div>
@@ -439,6 +425,45 @@ export default async function ListingDetailPage({
                     </div>
                   )}
                 </div>
+
+                {/* Modifications Section */}
+                {listing.is_modified && listing.modifications && listing.modifications.length > 0 && (
+                  <div style={{ marginTop: 16 }}>
+                    <div
+                      style={{
+                        fontWeight: 950,
+                        color: "var(--green-900)",
+                        marginBottom: 10,
+                      }}
+                    >
+                      Modifications
+                    </div>
+                    <div style={modificationsContainerStyle}>
+                      {listing.modifications.map((mod, index) => (
+                        <div key={index} style={modificationItemStyle}>
+                          <span style={modificationBulletStyle}>•</span>
+                          <span>{mod}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {listing.is_modified === false && (
+                  <div style={{ marginTop: 16 }}>
+                    <div
+                      style={{
+                        fontWeight: 950,
+                        color: "var(--green-900)",
+                        marginBottom: 10,
+                      }}
+                    >
+                      Modifications
+                    </div>
+                    <div style={stockBadgeStyle}>
+                      Stock / Unmodified
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -666,4 +691,38 @@ const specValueStyle: React.CSSProperties = {
   fontWeight: 800,
   color: "var(--green-900)",
   marginTop: 2,
+};
+
+const modificationsContainerStyle: React.CSSProperties = {
+  padding: 12,
+  borderRadius: 10,
+  background: "var(--soft)",
+  border: "1px solid var(--border)",
+};
+
+const modificationItemStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: 8,
+  padding: "6px 0",
+  fontSize: 14,
+  fontWeight: 650,
+  color: "var(--green-900)",
+};
+
+const modificationBulletStyle: React.CSSProperties = {
+  color: "var(--green-900)",
+  fontWeight: 900,
+  fontSize: 16,
+};
+
+const stockBadgeStyle: React.CSSProperties = {
+  display: "inline-block",
+  padding: "8px 14px",
+  borderRadius: 8,
+  background: "rgba(34, 197, 94, 0.1)",
+  border: "1px solid rgba(34, 197, 94, 0.3)",
+  color: "rgba(22, 101, 52, 1)",
+  fontWeight: 700,
+  fontSize: 14,
 };

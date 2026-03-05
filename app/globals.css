@@ -156,21 +156,169 @@ button, input, select, textarea {
 }
 
 .category-card {
-  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 28px 20px;
   font-weight: 900;
   font-size: 18px;
   color: var(--green-900);
   text-align: center;
+  text-decoration: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.category-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.category-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  background: rgba(11, 47, 26, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0b2f1a;
+  margin-bottom: 14px;
+}
+
+.category-label {
+  font-size: 17px;
+  font-weight: 800;
+  color: #0b2f1a;
+  margin-bottom: 4px;
+}
+
+.category-desc {
+  font-size: 13px;
+  font-weight: 600;
+  color: #5b6b62;
 }
 
 /* Header */
+.site-header-wrap {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(11, 47, 26, 0.08);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
 .site-header-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 32px;
+  height: 80px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  padding-top: 14px;
-  padding-bottom: 14px;
+  gap: 32px;
+}
+
+.site-logo {
+  height: 180px;
+  width: 180px;
+  object-fit: contain;
+}
+
+.site-main-nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nav-btn-primary {
+  padding: 10px 24px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+  text-decoration: none;
+  transition: all 0.15s ease;
+  letter-spacing: -0.01em;
+  background: #0b2f1a;
+  border: 1px solid #0b2f1a;
+}
+
+.nav-btn-secondary {
+  display: flex;
+  align-items: center;
+  padding: 10px 24px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #0b2f1a;
+  text-decoration: none;
+  transition: all 0.15s ease;
+  letter-spacing: -0.01em;
+  background: white;
+  border: 1px solid rgba(11, 47, 26, 0.14);
+  cursor: pointer;
+}
+
+.auth-container {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.auth-icon-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: rgba(11, 47, 26, 0.06);
+  color: #0b2f1a;
+  text-decoration: none;
+  transition: all 0.15s ease;
+  border: 1px solid transparent;
+}
+
+.auth-divider {
+  width: 1px;
+  height: 24px;
+  background: rgba(11, 47, 26, 0.12);
+  margin: 0 8px;
+}
+
+.auth-logout-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 20px;
+  border-radius: 10px;
+  background: #0b2f1a;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.auth-signin-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 24px;
+  border-radius: 10px;
+  background: #0b2f1a;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
 }
 
 .site-nav {
@@ -208,6 +356,13 @@ button, input, select, textarea {
 
 /* Filter Row */
 .filter-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* Two column form layout */
+.form-two-col {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
@@ -279,6 +434,26 @@ button, input, select, textarea {
     padding: 24px 16px;
     font-size: 16px;
   }
+
+  .category-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    margin-bottom: 12px;
+  }
+
+  .category-icon svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  .category-label {
+    font-size: 15px;
+  }
+
+  .category-desc {
+    font-size: 12px;
+  }
 }
 
 /* Mobile Breakpoint (600px) */
@@ -332,13 +507,87 @@ button, input, select, textarea {
   }
 
   .category-card {
-    padding: 20px 12px;
+    padding: 16px 12px;
     font-size: 15px;
   }
 
+  .category-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    margin-bottom: 10px;
+  }
+
+  .category-icon svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .category-label {
+    font-size: 14px;
+  }
+
+  .category-desc {
+    font-size: 11px;
+  }
+
   .site-header-inner {
-    padding-top: 10px;
-    padding-bottom: 10px;
+    padding: 0 12px;
+    height: 60px;
+    gap: 8px;
+  }
+
+  .site-logo {
+    height: 100px;
+    width: 100px;
+  }
+
+  .site-main-nav {
+    gap: 6px;
+  }
+
+  .nav-btn-primary {
+    padding: 8px 12px;
+    font-size: 13px;
+    border-radius: 8px;
+  }
+
+  .nav-btn-secondary {
+    padding: 8px 12px;
+    font-size: 13px;
+    border-radius: 8px;
+  }
+
+  .auth-container {
+    gap: 4px;
+  }
+
+  .auth-icon-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+  }
+
+  .auth-icon-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .auth-divider {
+    margin: 0 4px;
+    height: 20px;
+  }
+
+  .auth-logout-btn {
+    padding: 8px 12px;
+    font-size: 12px;
+    border-radius: 8px;
+  }
+
+  .auth-signin-btn {
+    padding: 8px 12px;
+    font-size: 12px;
+    border-radius: 8px;
   }
 
   .site-nav {
@@ -370,6 +619,10 @@ button, input, select, textarea {
     grid-template-columns: 1fr;
   }
 
+  .form-two-col {
+    grid-template-columns: 1fr;
+  }
+
   .message-bubble {
     max-width: 90%;
   }
@@ -386,5 +639,25 @@ button, input, select, textarea {
 
   .page-title {
     font-size: 26px;
+  }
+
+  /* Two column form layouts */
+  .two-col-form {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Image grid in edit form */
+  .image-grid-mobile {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+
+  /* Modifications section */
+  .mod-row-mobile {
+    flex-wrap: wrap;
+  }
+
+  .mod-row-mobile input {
+    width: 100%;
+    flex: none !important;
   }
 }

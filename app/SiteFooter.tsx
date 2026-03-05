@@ -30,6 +30,10 @@ export default function SiteFooter() {
               <Link href="/privacy" style={styles.link}>Privacy Policy</Link>
               <Link href="/cookies" style={styles.link}>Cookie Policy</Link>
             </div>
+            <div style={styles.linkGroup}>
+              <div style={styles.linkHeading}>Contact</div>
+              <a href="mailto:info@passiondriven.ie" style={styles.link}>info@passiondriven.ie</a>
+            </div>
           </div>
         </div>
         <div style={styles.bottom}>

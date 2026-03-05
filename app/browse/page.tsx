@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { Suspense, useEffect, useState, useCallback, useRef } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { supabase } from "../lib/supabaseClient";
+import { useToast } from "../components/useToast";
 import {
   IRISH_COUNTIES,
   CAR_MAKES,
@@ -42,6 +43,8 @@ type Listing = {
   wheel_quantity?: number | null;
 };
 
+type SortOption = "newest" | "oldest" | "price_low" | "price_high" | "mileage_low" | "mileage_high";
+
 type Filters = {
   search: string;
   category: Category;
@@ -54,10 +57,15 @@ type Filters = {
   location: string;
   transmission: string;
   hideSold: boolean;
+  // Mileage filter for cars
+  mileageMin: string;
+  mileageMax: string;
   // Wheel-specific filters
   wheelDiameter: string;
   wheelBrand: string;
   boltPattern: string;
+  // Sort
+  sort: SortOption;
 };
 
 const defaultFilters: Filters = {
@@ -72,9 +80,12 @@ const defaultFilters: Filters = {
   location: "",
   transmission: "",
   hideSold: true,
+  mileageMin: "",
+  mileageMax: "",
   wheelDiameter: "",
   wheelBrand: "",
   boltPattern: "",
+  sort: "newest",
 };
 
 const ITEMS_PER_PAGE = 12;
@@ -83,6 +94,8 @@ const DEBOUNCE_MS = 400;
 
 function BrowsePageContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const { toast } = useToast();
   const [listings, setListings] = useState<Listing[]>([]);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -92,6 +105,11 @@ function BrowsePageContent() {
   const [totalCount, setTotalCount] = useState(0);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [initializedFromUrl, setInitializedFromUrl] = useState(false);
+
+  // Save search modal state
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [alertName, setAlertName] = useState("");
+  const [savingAlert, setSavingAlert] = useState(false);
 
   // Separate state for search input (immediate UI update) vs debounced filter
   const [searchInput, setSearchInput] = useState("");
@@ -197,6 +215,83 @@ function BrowsePageContent() {
     return value !== "";
   });
 
+  // Generate a default name for the alert based on filters
+  const generateAlertName = useCallback(() => {
+    const parts: string[] = [];
+    if (filters.make) parts.push(filters.make);
+    if (filters.model) parts.push(filters.model);
+    if (filters.category) {
+      const catNames: Record<string, string> = { car: "Cars", wheels: "Wheels", part: "Parts", memorabilia: "Memorabilia" };
+      parts.push(catNames[filters.category] || filters.category);
+    }
+    if (filters.location) parts.push(`in ${filters.location}`);
+    if (filters.search) parts.push(`"${filters.search}"`);
+    return parts.length > 0 ? parts.join(" ") : "My Search Alert";
+  }, [filters]);
+
+  // Save the current search as an alert
+  const saveSearchAsAlert = useCallback(async () => {
+    if (!isLoggedIn) {
+      toast({ type: "error", message: "Please sign in to save searches" });
+      router.push("/login?next=/browse");
+      return;
+    }
+
+    if (!alertName.trim()) {
+      toast({ type: "error", message: "Please enter an alert name" });
+      return;
+    }
+
+    setSavingAlert(true);
+
+    try {
+      const res = await fetch("/api/alerts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: alertName.trim(),
+          category: filters.category || null,
+          make: filters.make || null,
+          model: filters.model || null,
+          year_min: filters.yearMin ? parseInt(filters.yearMin, 10) : null,
+          year_max: filters.yearMax ? parseInt(filters.yearMax, 10) : null,
+          price_min: filters.priceMin ? parseInt(filters.priceMin, 10) : null,
+          price_max: filters.priceMax ? parseInt(filters.priceMax, 10) : null,
+          location: filters.location || null,
+          transmission: filters.transmission || null,
+          mileage_min: filters.mileageMin ? parseInt(filters.mileageMin, 10) : null,
+          mileage_max: filters.mileageMax ? parseInt(filters.mileageMax, 10) : null,
+          wheel_brand: filters.wheelBrand || null,
+          wheel_diameter: filters.wheelDiameter ? parseFloat(filters.wheelDiameter) : null,
+          bolt_pattern: filters.boltPattern || null,
+          search_text: filters.search || null,
+          email_notifications: true,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to save search");
+      }
+
+      toast({ type: "success", message: "Search saved! You'll be notified of new matches." });
+      setShowSaveModal(false);
+      setAlertName("");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to save search";
+      toast({ type: "error", message });
+    } finally {
+      setSavingAlert(false);
+    }
+  }, [isLoggedIn, alertName, filters, toast, router]);
+
+  // Open save modal with generated name
+  const openSaveModal = useCallback(() => {
+    setAlertName(generateAlertName());
+    setShowSaveModal(true);
+  }, [generateAlertName]);
+
   useEffect(() => {
     let isMounted = true;
 
@@ -205,13 +300,36 @@ function BrowsePageContent() {
       setErrorMsg(null);
 
       // Build base query for both count and data
-      // Order by boosted_until first (boosted listings appear at top), then by created_at
       let baseQuery = supabase
         .from("listings")
         .select("id,title,category,price_eur,location,condition,created_at,status,image_urls,blur_data_urls,make,model,year,mileage_km,transmission,wheel_diameter,wheel_width,bolt_pattern,wheel_brand,wheel_quantity,boosted_until", { count: "exact" })
-        .in("status", ["active", "sold"]) // Only show approved listings
-        .order("boosted_until", { ascending: false, nullsFirst: false })
-        .order("created_at", { ascending: false });
+        .in("status", ["active", "sold"]); // Only show approved listings
+
+      // Apply sorting - boosted listings always appear first
+      baseQuery = baseQuery.order("boosted_until", { ascending: false, nullsFirst: false });
+
+      // Then apply user-selected sort
+      switch (filters.sort) {
+        case "oldest":
+          baseQuery = baseQuery.order("created_at", { ascending: true });
+          break;
+        case "price_low":
+          baseQuery = baseQuery.order("price_eur", { ascending: true, nullsFirst: false });
+          break;
+        case "price_high":
+          baseQuery = baseQuery.order("price_eur", { ascending: false, nullsFirst: false });
+          break;
+        case "mileage_low":
+          baseQuery = baseQuery.order("mileage_km", { ascending: true, nullsFirst: false });
+          break;
+        case "mileage_high":
+          baseQuery = baseQuery.order("mileage_km", { ascending: false, nullsFirst: false });
+          break;
+        case "newest":
+        default:
+          baseQuery = baseQuery.order("created_at", { ascending: false });
+          break;
+      }
 
       // Apply filters - search across multiple fields
       if (filters.search.trim()) {
@@ -261,6 +379,19 @@ function BrowsePageContent() {
       }
       if (filters.hideSold) {
         baseQuery = baseQuery.neq("status", "sold");
+      }
+      // Mileage filters (for cars)
+      if (filters.mileageMin) {
+        const mileageMin = parseInt(filters.mileageMin, 10);
+        if (Number.isFinite(mileageMin)) {
+          baseQuery = baseQuery.gte("mileage_km", mileageMin);
+        }
+      }
+      if (filters.mileageMax) {
+        const mileageMax = parseInt(filters.mileageMax, 10);
+        if (Number.isFinite(mileageMax)) {
+          baseQuery = baseQuery.lte("mileage_km", mileageMax);
+        }
       }
       // Wheel-specific filters
       if (filters.wheelDiameter) {
@@ -313,7 +444,7 @@ function BrowsePageContent() {
 
       {/* Search and Filters */}
       <section className="card" style={{ padding: 16, marginTop: 14 }}>
-        {/* Search bar */}
+        {/* Search bar and sort */}
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
           <input
             className="input"
@@ -323,21 +454,174 @@ function BrowsePageContent() {
             onChange={(e) => handleSearchChange(e.target.value)}
             style={{ flex: 1, minWidth: 200 }}
           />
+          <select
+            className="select"
+            value={filters.sort}
+            onChange={(e) => updateFilter("sort", e.target.value as SortOption)}
+            style={{ minWidth: 160 }}
+          >
+            <option value="newest">Newest first</option>
+            <option value="oldest">Oldest first</option>
+            <option value="price_low">Price: Low to High</option>
+            <option value="price_high">Price: High to Low</option>
+            <option value="mileage_low">Mileage: Low to High</option>
+            <option value="mileage_high">Mileage: High to Low</option>
+          </select>
           <button
             className="btn btn-secondary"
             type="button"
             onClick={() => setShowFilters(!showFilters)}
             style={{ display: "flex", alignItems: "center", gap: 6 }}
           >
-            {showFilters ? "Hide filters" : "Show filters"}
-            {hasActiveFilters && <span style={styles.filterBadge}>{Object.values(filters).filter((v) => v !== "" && v !== false).length}</span>}
+            {showFilters ? "Hide filters" : "Filters"}
+            {hasActiveFilters && <span style={styles.filterBadge}>{Object.entries(filters).filter(([k, v]) => k !== "sort" && k !== "hideSold" && v !== "" && v !== false).length}</span>}
           </button>
           {hasActiveFilters && (
             <button className="btn btn-secondary" type="button" onClick={clearFilters}>
               Clear all
             </button>
           )}
+          {hasActiveFilters && (
+            <button
+              className="btn btn-secondary"
+              type="button"
+              onClick={openSaveModal}
+              style={{ display: "flex", alignItems: "center", gap: 6 }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+              </svg>
+              Save search
+            </button>
+          )}
         </div>
+
+        {/* Active filter pills */}
+        {hasActiveFilters && (
+          <div style={styles.filterPills}>
+            {filters.category && (
+              <button
+                type="button"
+                style={styles.filterPill}
+                onClick={() => updateFilter("category", "")}
+              >
+                {filters.category === "car" ? "Cars" : filters.category === "wheels" ? "Wheels" : filters.category === "part" ? "Parts" : "Memorabilia"}
+                <span style={styles.pillX}>×</span>
+              </button>
+            )}
+            {filters.location && (
+              <button
+                type="button"
+                style={styles.filterPill}
+                onClick={() => updateFilter("location", "")}
+              >
+                {filters.location}
+                <span style={styles.pillX}>×</span>
+              </button>
+            )}
+            {filters.make && (
+              <button
+                type="button"
+                style={styles.filterPill}
+                onClick={() => updateFilter("make", "")}
+              >
+                {filters.make}
+                <span style={styles.pillX}>×</span>
+              </button>
+            )}
+            {filters.model && (
+              <button
+                type="button"
+                style={styles.filterPill}
+                onClick={() => updateFilter("model", "")}
+              >
+                {filters.model}
+                <span style={styles.pillX}>×</span>
+              </button>
+            )}
+            {(filters.yearMin || filters.yearMax) && (
+              <button
+                type="button"
+                style={styles.filterPill}
+                onClick={() => { updateFilter("yearMin", ""); updateFilter("yearMax", ""); }}
+              >
+                Year: {filters.yearMin || "Any"} - {filters.yearMax || "Any"}
+                <span style={styles.pillX}>×</span>
+              </button>
+            )}
+            {(filters.priceMin || filters.priceMax) && (
+              <button
+                type="button"
+                style={styles.filterPill}
+                onClick={() => { updateFilter("priceMin", ""); updateFilter("priceMax", ""); }}
+              >
+                €{filters.priceMin || "0"} - €{filters.priceMax || "Any"}
+                <span style={styles.pillX}>×</span>
+              </button>
+            )}
+            {(filters.mileageMin || filters.mileageMax) && (
+              <button
+                type="button"
+                style={styles.filterPill}
+                onClick={() => { updateFilter("mileageMin", ""); updateFilter("mileageMax", ""); }}
+              >
+                {filters.mileageMin || "0"} - {filters.mileageMax || "Any"} km
+                <span style={styles.pillX}>×</span>
+              </button>
+            )}
+            {filters.transmission && (
+              <button
+                type="button"
+                style={styles.filterPill}
+                onClick={() => updateFilter("transmission", "")}
+              >
+                {filters.transmission}
+                <span style={styles.pillX}>×</span>
+              </button>
+            )}
+            {filters.wheelBrand && (
+              <button
+                type="button"
+                style={styles.filterPill}
+                onClick={() => updateFilter("wheelBrand", "")}
+              >
+                {filters.wheelBrand}
+                <span style={styles.pillX}>×</span>
+              </button>
+            )}
+            {filters.wheelDiameter && (
+              <button
+                type="button"
+                style={styles.filterPill}
+                onClick={() => updateFilter("wheelDiameter", "")}
+              >
+                {filters.wheelDiameter}&quot;
+                <span style={styles.pillX}>×</span>
+              </button>
+            )}
+            {filters.boltPattern && (
+              <button
+                type="button"
+                style={styles.filterPill}
+                onClick={() => updateFilter("boltPattern", "")}
+              >
+                {filters.boltPattern}
+                <span style={styles.pillX}>×</span>
+              </button>
+            )}
+            {filters.search && (
+              <button
+                type="button"
+                style={styles.filterPill}
+                onClick={() => { setSearchInput(""); updateFilter("search", ""); }}
+              >
+                &quot;{filters.search}&quot;
+                <span style={styles.pillX}>×</span>
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Expandable filters */}
         {showFilters && (
@@ -480,6 +764,32 @@ function BrowsePageContent() {
               </div>
             )}
 
+            {/* Row 6: Mileage range (car-specific) */}
+            {(filters.category === "" || filters.category === "car") && (
+              <div className="filter-row">
+                <div style={styles.filterGroup}>
+                  <label style={styles.filterLabel}>Mileage min (km)</label>
+                  <input
+                    className="input"
+                    type="number"
+                    placeholder="e.g. 0"
+                    value={filters.mileageMin}
+                    onChange={(e) => updateFilter("mileageMin", e.target.value)}
+                  />
+                </div>
+                <div style={styles.filterGroup}>
+                  <label style={styles.filterLabel}>Mileage max (km)</label>
+                  <input
+                    className="input"
+                    type="number"
+                    placeholder="e.g. 100000"
+                    value={filters.mileageMax}
+                    onChange={(e) => updateFilter("mileageMax", e.target.value)}
+                  />
+                </div>
+              </div>
+            )}
+
             {/* Wheel-specific filters */}
             {(filters.category === "" || filters.category === "wheels") && (
               <>
@@ -604,6 +914,57 @@ function BrowsePageContent() {
           )}
         </>
       )}
+
+      {/* Save Search Modal */}
+      {showSaveModal && (
+        <div style={styles.modalOverlay} onClick={() => setShowSaveModal(false)}>
+          <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <div style={styles.modalHeader}>
+              <h3 style={styles.modalTitle}>Save this search</h3>
+              <button
+                type="button"
+                onClick={() => setShowSaveModal(false)}
+                style={styles.modalClose}
+              >
+                ×
+              </button>
+            </div>
+            <p style={styles.modalDesc}>
+              Get notified when new listings match your search criteria.
+            </p>
+            <div style={{ marginBottom: 16 }}>
+              <label style={styles.filterLabel}>Alert name</label>
+              <input
+                className="input"
+                value={alertName}
+                onChange={(e) => setAlertName(e.target.value)}
+                placeholder="e.g. JDM Sports Cars under €20k"
+                maxLength={100}
+                disabled={savingAlert}
+                autoFocus
+              />
+            </div>
+            <div style={styles.modalActions}>
+              <button
+                className="btn btn-secondary"
+                type="button"
+                onClick={() => setShowSaveModal(false)}
+                disabled={savingAlert}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn btn-primary"
+                type="button"
+                onClick={saveSearchAsAlert}
+                disabled={savingAlert || !alertName.trim()}
+              >
+                {savingAlert ? "Saving..." : "Save & get alerts"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
@@ -647,6 +1008,85 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 700,
     color: "var(--green-900)",
     fontSize: 14,
+  },
+  filterPills: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: 8,
+    marginTop: 12,
+  },
+  filterPill: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 6,
+    padding: "6px 12px",
+    borderRadius: 999,
+    background: "var(--green-100)",
+    color: "var(--green-900)",
+    fontSize: 13,
+    fontWeight: 650,
+    border: "none",
+    cursor: "pointer",
+    transition: "background 0.15s ease",
+  },
+  pillX: {
+    fontSize: 16,
+    lineHeight: 1,
+    opacity: 0.6,
+  },
+  modalOverlay: {
+    position: "fixed",
+    inset: 0,
+    background: "rgba(0, 0, 0, 0.5)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 1000,
+    padding: 16,
+  },
+  modal: {
+    background: "white",
+    borderRadius: 16,
+    padding: 24,
+    width: "100%",
+    maxWidth: 440,
+    boxShadow: "0 20px 60px rgba(0, 0, 0, 0.2)",
+  },
+  modalHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  modalTitle: {
+    margin: 0,
+    fontSize: 20,
+    fontWeight: 900,
+    color: "var(--green-900)",
+  },
+  modalClose: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    border: "none",
+    background: "transparent",
+    fontSize: 24,
+    color: "var(--muted)",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  modalDesc: {
+    margin: "0 0 16px",
+    color: "var(--muted)",
+    fontWeight: 600,
+    fontSize: 14,
+  },
+  modalActions: {
+    display: "flex",
+    gap: 12,
+    justifyContent: "flex-end",
   },
 };
 

@@ -75,7 +75,6 @@ export default function AuthStatus({ initialUserEmail }: Props) {
     };
   }, [router]);
 
-  // Fetch unread count when user is available and poll periodically
   useEffect(() => {
     if (!user) {
       setUnreadCount(0);
@@ -86,7 +85,6 @@ export default function AuthStatus({ initialUserEmail }: Props) {
     fetchUnreadCount();
     fetchAlertCount();
 
-    // Poll every 30 seconds for new messages and alerts
     const interval = setInterval(() => {
       fetchUnreadCount();
       fetchAlertCount();
@@ -106,68 +104,85 @@ export default function AuthStatus({ initialUserEmail }: Props) {
 
   if (!email) {
     return (
-      <Link className="btn btn-secondary" href="/login">
+      <Link href="/login" className="auth-signin-btn">
         Sign in
       </Link>
     );
   }
 
   return (
-    <>
-      <span style={{ color: "var(--muted)", fontWeight: 650 }}>Signed in as {email}</span>
-      <Link className="btn btn-secondary" href="/messages" style={badgeLinkStyle}>
-        Messages
+    <div className="auth-container">
+      {/* Icon buttons for Messages, Alerts, Account */}
+      <Link href="/messages" className="auth-icon-btn" title="Messages">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+        </svg>
         {unreadCount > 0 && (
-          <span style={unreadBadgeStyle}>
-            {unreadCount > 99 ? "99+" : unreadCount}
-          </span>
+          <span style={styles.badge}>{unreadCount > 99 ? "99+" : unreadCount}</span>
         )}
       </Link>
-      <Link className="btn btn-secondary" href="/account/alerts" style={badgeLinkStyle}>
-        Alerts
+
+      <Link href="/account/alerts" className="auth-icon-btn" title="Alerts">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+          <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+        </svg>
         {alertCount > 0 && (
-          <span style={alertBadgeStyle}>
-            {alertCount > 99 ? "99+" : alertCount}
-          </span>
+          <span style={styles.badgeGreen}>{alertCount > 99 ? "99+" : alertCount}</span>
         )}
       </Link>
-      <Link className="btn btn-secondary" href="/account">
-        Account
+
+      <Link href="/account" className="auth-icon-btn" title="Account">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+          <circle cx="12" cy="7" r="4" />
+        </svg>
       </Link>
-      <button className="btn btn-primary" type="button" onClick={handleLogout}>
+
+      {/* Divider */}
+      <div className="auth-divider" />
+
+      {/* Logout button */}
+      <button type="button" onClick={handleLogout} className="auth-logout-btn">
         Log out
       </button>
-    </>
+    </div>
   );
 }
 
-const badgeLinkStyle: CSSProperties = {
-  position: "relative",
-  display: "inline-flex",
-  alignItems: "center",
-  gap: 6,
-};
-
-const unreadBadgeStyle: CSSProperties = {
-  background: "rgba(220,38,38,0.95)",
-  color: "#fff",
-  fontSize: 11,
-  fontWeight: 800,
-  padding: "2px 6px",
-  borderRadius: 999,
-  minWidth: 18,
-  textAlign: "center",
-  lineHeight: 1.2,
-};
-
-const alertBadgeStyle: CSSProperties = {
-  background: "var(--green-900)",
-  color: "#fff",
-  fontSize: 11,
-  fontWeight: 800,
-  padding: "2px 6px",
-  borderRadius: 999,
-  minWidth: 18,
-  textAlign: "center",
-  lineHeight: 1.2,
+const styles: Record<string, CSSProperties> = {
+  badge: {
+    position: "absolute",
+    top: -4,
+    right: -4,
+    minWidth: 18,
+    height: 18,
+    padding: "0 5px",
+    borderRadius: 9,
+    background: "#dc2626",
+    color: "#fff",
+    fontSize: 11,
+    fontWeight: 700,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    lineHeight: 1,
+  },
+  badgeGreen: {
+    position: "absolute",
+    top: -4,
+    right: -4,
+    minWidth: 18,
+    height: 18,
+    padding: "0 5px",
+    borderRadius: 9,
+    background: "#0b2f1a",
+    color: "#fff",
+    fontSize: 11,
+    fontWeight: 700,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    lineHeight: 1,
+  },
 };

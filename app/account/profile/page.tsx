@@ -66,6 +66,7 @@ export default async function ProfilePage() {
           initialLocation={profile?.location ?? ""}
           initialSocialLink={profile?.social_link ?? ""}
           initialPhone={profile?.phone ?? ""}
+          initialAvatarUrl={profile?.avatar_url ?? null}
         />
       </section>
 
