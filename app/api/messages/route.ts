@@ -116,7 +116,12 @@ export async function POST(request: Request) {
   if (recipientProfile?.email_messages !== false) {
     // We need to get the recipient's email - fetch via admin or use a function
     // For security, we'll create a server-side function to get the email
-    const { data: recipientAuth } = await supabase.rpc("get_user_email", { p_user_id: recipientId });
+    const { data: recipientAuth, error: rpcError } = await supabase.rpc("get_user_email", { p_user_id: recipientId });
+
+    console.log("[Email Debug] recipientId:", recipientId);
+    console.log("[Email Debug] recipientAuth:", recipientAuth);
+    console.log("[Email Debug] rpcError:", rpcError);
+    console.log("[Email Debug] RESEND_API_KEY exists:", !!process.env.RESEND_API_KEY);
 
     if (recipientAuth) {
       // Send email asynchronously (don't wait for it)
@@ -127,10 +132,14 @@ export async function POST(request: Request) {
         listingTitle: listing?.title || "a listing",
         messagePreview: trimmedBody,
         threadId,
+      }).then((result) => {
+        console.log("[Email Debug] sendNewMessageEmail result:", result);
       }).catch((err) => {
-        console.error("Failed to send message notification email:", err);
+        console.error("[Email Debug] Failed to send message notification email:", err);
       });
     }
+  } else {
+    console.log("[Email Debug] Skipping email - recipient has email_messages disabled");
   }
 
   return NextResponse.json({ message }, { status: 201 });

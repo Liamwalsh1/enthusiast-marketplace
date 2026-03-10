@@ -116,7 +116,11 @@ Manage settings: ${SITE_URL}/account/profile
   `.trim();
 
   try {
-    const { error } = await resend.emails.send({
+    console.log("[Resend Debug] Attempting to send email to:", toEmail);
+    console.log("[Resend Debug] From:", FROM_EMAIL);
+    console.log("[Resend Debug] API Key prefix:", process.env.RESEND_API_KEY?.substring(0, 10));
+
+    const { data, error } = await resend.emails.send({
       from: FROM_EMAIL,
       to: toEmail,
       subject: `New message from ${senderName} - ${listingTitle}`,
@@ -125,13 +129,14 @@ Manage settings: ${SITE_URL}/account/profile
     });
 
     if (error) {
-      console.error("Failed to send message notification email:", error);
+      console.error("[Resend Debug] Resend API error:", JSON.stringify(error));
       return { success: false, error };
     }
 
+    console.log("[Resend Debug] Email sent successfully, id:", data?.id);
     return { success: true };
   } catch (err) {
-    console.error("Email send error:", err);
+    console.error("[Resend Debug] Email send exception:", err);
     return { success: false, error: err };
   }
 }
