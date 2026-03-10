@@ -12,6 +12,8 @@ type Props = {
   initialSocialLink: string;
   initialPhone: string;
   initialAvatarUrl: string | null;
+  initialEmailMessages: boolean;
+  initialEmailAlerts: boolean;
 };
 
 export default function EditProfileForm({
@@ -21,6 +23,8 @@ export default function EditProfileForm({
   initialSocialLink,
   initialPhone,
   initialAvatarUrl,
+  initialEmailMessages,
+  initialEmailAlerts,
 }: Props) {
   const router = useRouter();
   const { toast } = useToast();
@@ -32,6 +36,8 @@ export default function EditProfileForm({
   const [socialLink, setSocialLink] = useState(initialSocialLink);
   const [phone, setPhone] = useState(initialPhone);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(initialAvatarUrl);
+  const [emailMessages, setEmailMessages] = useState(initialEmailMessages);
+  const [emailAlerts, setEmailAlerts] = useState(initialEmailAlerts);
   const [loading, setLoading] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -105,6 +111,8 @@ export default function EditProfileForm({
           location: location,
           social_link: socialLink.trim(),
           phone: phone.trim(),
+          email_messages: emailMessages,
+          email_alerts: emailAlerts,
         }),
       });
 
@@ -254,6 +262,35 @@ export default function EditProfileForm({
         <div style={hintStyle}>Only shown to users you message with</div>
       </div>
 
+      <div style={dividerStyle} />
+
+      <div>
+        <label style={labelStyle}>Email Notifications</label>
+        <div style={hintStyle}>Choose which emails you want to receive</div>
+
+        <label style={checkboxLabelStyle}>
+          <input
+            type="checkbox"
+            checked={emailMessages}
+            onChange={(e) => setEmailMessages(e.target.checked)}
+            disabled={loading}
+            style={checkboxStyle}
+          />
+          <span>New message notifications</span>
+        </label>
+
+        <label style={checkboxLabelStyle}>
+          <input
+            type="checkbox"
+            checked={emailAlerts}
+            onChange={(e) => setEmailAlerts(e.target.checked)}
+            disabled={loading}
+            style={checkboxStyle}
+          />
+          <span>Search alert matches</span>
+        </label>
+      </div>
+
       {error && (
         <div className="card" style={errorStyles}>
           {error}
@@ -346,4 +383,23 @@ const dividerStyle: CSSProperties = {
   height: 1,
   background: "var(--border)",
   margin: "8px 0",
+};
+
+const checkboxLabelStyle: CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: 10,
+  marginTop: 12,
+  padding: "12px 14px",
+  borderRadius: 10,
+  border: "1px solid var(--border)",
+  cursor: "pointer",
+  fontWeight: 650,
+  color: "var(--green-900)",
+};
+
+const checkboxStyle: CSSProperties = {
+  width: 18,
+  height: 18,
+  accentColor: "var(--green-900)",
 };

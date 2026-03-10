@@ -14,6 +14,8 @@ type Profile = {
   social_link: string | null;
   phone: string | null;
   avatar_url: string | null;
+  email_messages: boolean | null;
+  email_alerts: boolean | null;
   created_at: string;
   updated_at: string;
 };
@@ -30,7 +32,7 @@ export default async function ProfilePage() {
 
   const { data: profile } = await supabase
     .from("user_profiles")
-    .select("id, user_id, display_name, bio, location, social_link, phone, avatar_url, created_at, updated_at")
+    .select("id, user_id, display_name, bio, location, social_link, phone, avatar_url, email_messages, email_alerts, created_at, updated_at")
     .eq("user_id", user.id)
     .maybeSingle();
 
@@ -67,6 +69,8 @@ export default async function ProfilePage() {
           initialSocialLink={profile?.social_link ?? ""}
           initialPhone={profile?.phone ?? ""}
           initialAvatarUrl={profile?.avatar_url ?? null}
+          initialEmailMessages={profile?.email_messages ?? true}
+          initialEmailAlerts={profile?.email_alerts ?? true}
         />
       </section>
 

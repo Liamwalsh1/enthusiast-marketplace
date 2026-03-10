@@ -40,6 +40,8 @@ export async function POST(request: Request) {
     location?: string;
     social_link?: string;
     phone?: string;
+    email_messages?: boolean;
+    email_alerts?: boolean;
   };
 
   try {
@@ -54,6 +56,8 @@ export async function POST(request: Request) {
   const location = body.location?.trim().slice(0, 100) || null;
   const socialLink = body.social_link?.trim().slice(0, 200) || null;
   const phone = body.phone?.trim().slice(0, 20) || null;
+  const emailMessages = typeof body.email_messages === "boolean" ? body.email_messages : true;
+  const emailAlerts = typeof body.email_alerts === "boolean" ? body.email_alerts : true;
 
   // Check if profile exists
   const { data: existing } = await supabase
@@ -72,9 +76,11 @@ export async function POST(request: Request) {
         location,
         social_link: socialLink,
         phone,
+        email_messages: emailMessages,
+        email_alerts: emailAlerts,
       })
       .eq("user_id", user.id)
-      .select("id, user_id, display_name, bio, location, social_link, phone, avatar_url, created_at, updated_at")
+      .select("id, user_id, display_name, bio, location, social_link, phone, avatar_url, email_messages, email_alerts, created_at, updated_at")
       .single();
 
     if (error) {
@@ -93,8 +99,10 @@ export async function POST(request: Request) {
         location,
         social_link: socialLink,
         phone,
+        email_messages: emailMessages,
+        email_alerts: emailAlerts,
       })
-      .select("id, user_id, display_name, bio, location, social_link, phone, avatar_url, created_at, updated_at")
+      .select("id, user_id, display_name, bio, location, social_link, phone, avatar_url, email_messages, email_alerts, created_at, updated_at")
       .single();
 
     if (error) {

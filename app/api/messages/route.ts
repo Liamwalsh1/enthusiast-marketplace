@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/app/lib/supabase/server";
+import { sendNewMessageEmail } from "@/app/lib/email";
 
 type MessagePayload = {
   threadId?: string;
@@ -84,6 +85,53 @@ export async function POST(request: Request) {
   }
 
   await supabase.from("threads").update({ last_message_at: new Date().toISOString() }).eq("id", threadId);
+
+  // Send email notification to the recipient (non-blocking)
+  const recipientId = thread.buyer_id === user.id ? thread.seller_id : thread.buyer_id;
+
+  // Fetch recipient info, sender info, and listing title
+  const [recipientResult, senderResult, listingResult] = await Promise.all([
+    supabase
+      .from("user_profiles")
+      .select("display_name, email_messages")
+      .eq("user_id", recipientId)
+      .maybeSingle(),
+    supabase
+      .from("user_profiles")
+      .select("display_name")
+      .eq("user_id", user.id)
+      .maybeSingle(),
+    thread.listing_id
+      ? supabase.from("listings").select("title").eq("id", thread.listing_id).maybeSingle()
+      : Promise.resolve({ data: null }),
+  ]);
+
+  // Get recipient email from auth.users via RPC or service role
+  // For now, we'll use the Supabase admin client approach
+  const recipientProfile = recipientResult.data;
+  const senderProfile = senderResult.data;
+  const listing = listingResult.data;
+
+  // Only send if recipient has email_messages enabled (default true)
+  if (recipientProfile?.email_messages !== false) {
+    // We need to get the recipient's email - fetch via admin or use a function
+    // For security, we'll create a server-side function to get the email
+    const { data: recipientAuth } = await supabase.rpc("get_user_email", { p_user_id: recipientId });
+
+    if (recipientAuth) {
+      // Send email asynchronously (don't wait for it)
+      sendNewMessageEmail({
+        toEmail: recipientAuth,
+        toName: recipientProfile?.display_name || recipientAuth.split("@")[0],
+        senderName: senderProfile?.display_name || user.email?.split("@")[0] || "Someone",
+        listingTitle: listing?.title || "a listing",
+        messagePreview: trimmedBody,
+        threadId,
+      }).catch((err) => {
+        console.error("Failed to send message notification email:", err);
+      });
+    }
+  }
 
   return NextResponse.json({ message }, { status: 201 });
 }
