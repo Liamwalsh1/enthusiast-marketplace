@@ -333,6 +333,17 @@ function SellPageContent() {
         if (updateErr) throw updateErr;
       }
 
+      // Notify admin of new listing
+      try {
+        await fetch("/api/listings/notify-admin", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ listingId: data.id }),
+        });
+      } catch {
+        // Ignore errors - admin notification is non-critical
+      }
+
       router.push(`/listings/${data.id}?submitted=true`);
     } catch (err) {
       setIsSubmitting(false);

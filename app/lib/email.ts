@@ -284,3 +284,137 @@ Manage alerts: ${SITE_URL}/account/alerts
     return { success: false, error: err };
   }
 }
+
+// Admin notification when a new listing is submitted for review
+export async function sendAdminNewListingEmail({
+  listingId,
+  listingTitle,
+  category,
+  sellerEmail,
+  sellerName,
+  price,
+  imageUrl,
+}: {
+  listingId: string;
+  listingTitle: string;
+  category: string;
+  sellerEmail: string;
+  sellerName: string;
+  price: number | null;
+  imageUrl: string | null;
+}) {
+  const adminEmail = process.env.ADMIN_EMAIL;
+  if (!adminEmail) {
+    console.warn("ADMIN_EMAIL not set, skipping admin notification");
+    return { success: false, error: "ADMIN_EMAIL not configured" };
+  }
+
+  const resend = getResend();
+
+  const priceDisplay = price ? `€${price.toLocaleString()}` : "Price on request";
+  const categoryLabel = category.charAt(0).toUpperCase() + category.slice(1);
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; background-color: #f5f5f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 40px 20px;">
+    <tr>
+      <td align="center">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 480px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+          <!-- Header -->
+          <tr>
+            <td style="background-color: #14532d; padding: 24px 32px; text-align: center;">
+              <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 900;">New Listing Pending</h1>
+            </td>
+          </tr>
+
+          <!-- Content -->
+          <tr>
+            <td style="padding: 32px;">
+              <p style="margin: 0 0 16px; color: #14532d; font-size: 16px; font-weight: 600;">
+                A new listing needs your review:
+              </p>
+
+              ${imageUrl ? `
+              <div style="margin-bottom: 16px;">
+                <img src="${imageUrl}" alt="" style="width: 100%; max-height: 200px; object-fit: cover; border-radius: 12px;" />
+              </div>
+              ` : ""}
+
+              <div style="background-color: #f0fdf4; border-radius: 12px; padding: 16px; margin-bottom: 16px;">
+                <p style="margin: 0 0 8px; color: #14532d; font-size: 18px; font-weight: 700;">${listingTitle}</p>
+                <p style="margin: 0; color: #666; font-size: 14px;">
+                  <strong>Category:</strong> ${categoryLabel}<br>
+                  <strong>Price:</strong> ${priceDisplay}
+                </p>
+              </div>
+
+              <div style="background-color: #f5f5f5; border-radius: 12px; padding: 16px; margin-bottom: 24px;">
+                <p style="margin: 0 0 4px; color: #666; font-size: 12px; font-weight: 600; text-transform: uppercase;">Seller</p>
+                <p style="margin: 0; color: #333; font-size: 14px; font-weight: 600;">${sellerName}</p>
+                <p style="margin: 0; color: #666; font-size: 13px;">${sellerEmail}</p>
+              </div>
+
+              <a href="${SITE_URL}/admin/pending" style="display: inline-block; background-color: #14532d; color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 10px; font-size: 15px; font-weight: 700; margin-right: 8px;">
+                Review Pending Listings
+              </a>
+              <a href="${SITE_URL}/listings/${listingId}" style="display: inline-block; background-color: #f5f5f5; color: #14532d; text-decoration: none; padding: 14px 28px; border-radius: 10px; font-size: 15px; font-weight: 700; border: 1px solid #ddd;">
+                View Listing
+              </a>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 24px 32px; border-top: 1px solid #eee;">
+              <p style="margin: 0; color: #999; font-size: 12px; text-align: center;">
+                This is an automated admin notification from PassionDriven.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `.trim();
+
+  const text = `
+New listing pending review on PassionDriven:
+
+Title: ${listingTitle}
+Category: ${categoryLabel}
+Price: ${priceDisplay}
+
+Seller: ${sellerName} (${sellerEmail})
+
+Review pending listings: ${SITE_URL}/admin/pending
+View listing: ${SITE_URL}/listings/${listingId}
+  `.trim();
+
+  try {
+    const { error } = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: adminEmail,
+      subject: `New listing pending: ${listingTitle}`,
+      html,
+      text,
+    });
+
+    if (error) {
+      console.error("Failed to send admin notification email:", error);
+      return { success: false, error };
+    }
+
+    return { success: true };
+  } catch (err) {
+    console.error("Admin email send error:", err);
+    return { success: false, error: err };
+  }
+}
