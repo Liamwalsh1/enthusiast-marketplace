@@ -52,7 +52,7 @@ export default async function ThreadPage({ params }: { params: Promise<{ threadI
 
   const { data: messageRows } = await supabase
     .from("messages")
-    .select("id, sender_id, body, created_at")
+    .select("id, sender_id, body, image_url, created_at")
     .eq("thread_id", threadId)
     .order("created_at", { ascending: true });
   const messages = messageRows ?? [];
@@ -157,7 +157,24 @@ export default async function ThreadPage({ params }: { params: Promise<{ threadI
                   <div style={{ fontSize: 13, opacity: 0.8, marginBottom: 4 }}>
                     {new Date(message.created_at).toLocaleString("en-IE")}
                   </div>
-                  <div style={{ whiteSpace: "pre-wrap", fontWeight: 650 }}>{message.body}</div>
+                  {message.image_url && (
+                    <a href={message.image_url} target="_blank" rel="noopener noreferrer">
+                      <img
+                        src={message.image_url}
+                        alt="Attachment"
+                        style={{
+                          maxWidth: "100%",
+                          maxHeight: 300,
+                          borderRadius: 10,
+                          marginBottom: message.body ? 8 : 0,
+                          cursor: "pointer",
+                        }}
+                      />
+                    </a>
+                  )}
+                  {message.body && (
+                    <div style={{ whiteSpace: "pre-wrap", fontWeight: 650 }}>{message.body}</div>
+                  )}
                 </div>
               );
             })

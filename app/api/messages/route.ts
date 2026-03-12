@@ -5,6 +5,7 @@ import { sendNewMessageEmail } from "@/app/lib/email";
 type MessagePayload = {
   threadId?: string;
   body?: string;
+  image_url?: string;
 };
 
 export async function POST(request: Request) {
@@ -26,13 +27,14 @@ export async function POST(request: Request) {
 
   const threadId = payload.threadId?.trim();
   const messageBody = payload.body?.trim();
+  const imageUrl = payload.image_url?.trim();
 
   if (!threadId) {
     return NextResponse.json({ error: "threadId is required." }, { status: 400 });
   }
 
-  if (!messageBody) {
-    return NextResponse.json({ error: "Message body cannot be empty." }, { status: 400 });
+  if (!messageBody && !imageUrl) {
+    return NextResponse.json({ error: "Message body or image is required." }, { status: 400 });
   }
 
   const { data: thread, error: threadError } = await supabase
@@ -65,7 +67,7 @@ export async function POST(request: Request) {
     }
   }
 
-  const trimmedBody = messageBody.slice(0, 2000);
+  const trimmedBody = messageBody?.slice(0, 2000) || "";
 
   const { data: message, error: insertError } = await supabase
     .from("messages")
@@ -73,8 +75,9 @@ export async function POST(request: Request) {
       thread_id: threadId,
       sender_id: user.id,
       body: trimmedBody,
+      image_url: imageUrl || null,
     })
-    .select("id, thread_id, sender_id, body, created_at")
+    .select("id, thread_id, sender_id, body, image_url, created_at")
     .single();
 
   if (insertError || !message) {
@@ -123,7 +126,7 @@ export async function POST(request: Request) {
         toName: recipientProfile?.display_name || recipientEmail.split("@")[0],
         senderName: senderProfile?.display_name || user.email?.split("@")[0] || "Someone",
         listingTitle: listing?.title || "a listing",
-        messagePreview: trimmedBody,
+        messagePreview: imageUrl ? "[Image]" : trimmedBody,
         threadId,
       }).catch((err) => {
         console.error("Failed to send message notification email:", err);
