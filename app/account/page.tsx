@@ -20,14 +20,22 @@ export default async function AccountPage() {
     redirect("/login?next=/account");
   }
 
-  // Fetch user profile
-  const { data: profile } = await supabase
-    .from("user_profiles")
-    .select("display_name, bio, location, avatar_url")
-    .eq("user_id", user.id)
-    .maybeSingle();
+  // Fetch user profile and role in parallel
+  const [{ data: profile }, { data: userRole }] = await Promise.all([
+    supabase
+      .from("user_profiles")
+      .select("display_name, bio, location, avatar_url")
+      .eq("user_id", user.id)
+      .maybeSingle(),
+    supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .maybeSingle(),
+  ]);
 
   const displayName = profile?.display_name || user.email?.split("@")[0] || "User";
+  const isAdmin = userRole?.role === "admin";
 
   return (
     <main className="container">
@@ -88,6 +96,12 @@ export default async function AccountPage() {
           <div style={styles.title}>Profile Settings</div>
           <div style={styles.text}>Update your display name, bio, and contact info.</div>
         </Link>
+        {isAdmin && (
+          <Link className="card" href="/admin" style={{ ...styles.card, background: "rgba(20, 83, 45, 0.05)", borderColor: "var(--green-900)" }}>
+            <div style={styles.title}>Admin Dashboard</div>
+            <div style={styles.text}>Review pending listings, manage users, and moderate content.</div>
+          </Link>
+        )}
       </div>
     </main>
   );
