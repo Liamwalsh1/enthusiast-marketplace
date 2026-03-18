@@ -443,7 +443,7 @@ function BrowsePageContent() {
       </div>
 
       {/* Search and Filters */}
-      <section className="card" style={{ padding: 16, marginTop: 14 }}>
+      <section className="card browse-filters" style={{ padding: 16, marginTop: 14 }}>
         {/* Search bar and sort */}
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
           <input

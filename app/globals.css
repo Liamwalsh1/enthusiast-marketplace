@@ -361,6 +361,14 @@ button, input, select, textarea {
   gap: 12px;
 }
 
+/* Sticky filter section on browse page */
+.browse-filters {
+  position: sticky;
+  top: 76px; /* Below the header (80px - 4px for tight fit) */
+  z-index: 50;
+  background: var(--bg);
+}
+
 /* Two column form layout */
 .form-two-col {
   display: grid;
@@ -617,6 +625,10 @@ button, input, select, textarea {
 
   .filter-row {
     grid-template-columns: 1fr;
+  }
+
+  .browse-filters {
+    top: 56px; /* Smaller header on mobile */
   }
 
   .form-two-col {
