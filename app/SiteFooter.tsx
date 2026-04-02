@@ -33,6 +33,7 @@ export default function SiteFooter() {
             <div style={styles.linkGroup}>
               <div style={styles.linkHeading}>Contact</div>
               <a href="mailto:info@passiondriven.ie" style={styles.link}>info@passiondriven.ie</a>
+              <a href="https://www.instagram.com/passiondriven.irl/" target="_blank" rel="noopener noreferrer" style={styles.link}>Instagram</a>
             </div>
           </div>
         </div>
