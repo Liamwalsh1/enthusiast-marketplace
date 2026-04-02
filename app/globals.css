@@ -234,6 +234,8 @@ button, input, select, textarea {
 }
 
 .nav-btn-primary {
+  display: flex;
+  align-items: center;
   padding: 10px 24px;
   border-radius: 10px;
   font-size: 15px;
