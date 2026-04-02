@@ -672,4 +672,8 @@ button, input, select, textarea {
     width: 100%;
     flex: none !important;
   }
+
+  .trust-divider {
+    display: none;
+  }
 }
