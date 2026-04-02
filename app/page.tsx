@@ -32,9 +32,9 @@ export default async function Home() {
           <span className="pill">Passion Driven</span>
         </div>
 
-        <h1 className="hero-title">Buy and sell enthusiast cars, parts, and memorabilia.</h1>
+        <h1 className="hero-title">Ireland's marketplace for enthusiast cars, parts & memorabilia.</h1>
         <p style={styles.p}>
-          Ireland's home for everything from pristine japanese sports cars to project-worthy european sedans.
+          Trusted listings for collectors, builders and petrolheads.
         </p>
 
         <div style={styles.actions}>
