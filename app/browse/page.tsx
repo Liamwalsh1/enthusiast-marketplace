@@ -861,6 +861,17 @@ function BrowsePageContent() {
               </div>
               <div />
             </div>
+
+            {/* Close filters button */}
+            <div style={{ borderTop: "1px solid var(--border)", paddingTop: 12, display: "flex", justifyContent: "flex-end" }}>
+              <button
+                className="btn btn-secondary"
+                type="button"
+                onClick={() => setShowFilters(false)}
+              >
+                Hide filters
+              </button>
+            </div>
           </div>
         )}
       </section>
