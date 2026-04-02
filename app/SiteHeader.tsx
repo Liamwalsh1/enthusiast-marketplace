@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createServerSupabaseClient } from "./lib/supabase/server";
 import AuthStatus from "./components/AuthStatus";
 import SellDropdown from "./components/SellDropdown";
+import BrowseDropdown from "./components/BrowseDropdown";
 
 export const dynamic = "force-dynamic";
 
@@ -21,9 +22,7 @@ export default async function SiteHeader() {
 
         {/* Center: Main Navigation */}
         <nav className="site-main-nav">
-          <Link href="/browse" className="nav-btn-primary">
-            Browse Listings
-          </Link>
+          <BrowseDropdown />
           <SellDropdown />
         </nav>
 
