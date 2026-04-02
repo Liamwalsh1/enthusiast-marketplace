@@ -28,10 +28,6 @@ export default async function Home() {
   return (
     <main className="container">
       <section style={styles.hero} className="card">
-        <div style={styles.heroTop}>
-          <span className="pill">Passion Driven</span>
-        </div>
-
         <h1 className="hero-title">Ireland's marketplace for enthusiast cars, parts & memorabilia.</h1>
         <p style={styles.p}>
           Trusted listings for collectors, builders and petrolheads.
@@ -153,7 +149,6 @@ export default async function Home() {
 
 const styles: Record<string, React.CSSProperties> = {
   hero: { padding: 22 },
-  heroTop: { display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 12 },
   p: { marginTop: 12, marginBottom: 16, color: "var(--muted)", maxWidth: 760, fontWeight: 650 },
   actions: { display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 14 },
   sectionTitle: {
