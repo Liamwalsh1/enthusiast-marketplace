@@ -81,17 +81,17 @@ export default function ListingCard({ listing, isLoggedIn, showCategory = false,
         <div style={styles.cardContent}>
           <div style={styles.badges}>
             {showCategory && <span className="pill">{labelCategory(listing.category)}</span>}
-            <span className="pill">{listing.location ?? "—"}</span>
-            <span className="pill">{listing.condition ?? "—"}</span>
+            {listing.location && <span className="pill">{listing.location}</span>}
           </div>
           <div style={styles.listingTitle}>{listing.title}</div>
-          {listing.category === "car" && (listing.year || listing.mileage_km || listing.transmission) && (
+          {listing.category === "car" && (listing.year || listing.mileage_km || listing.transmission || listing.condition) && (
             <div style={styles.specsRow}>
               {listing.year && <span>{listing.year}</span>}
               {listing.mileage_km !== null && listing.mileage_km !== undefined && (
                 <span>{formatMileage(listing.mileage_km)}</span>
               )}
               {listing.transmission && <span>{listing.transmission}</span>}
+              {listing.condition && <span>{listing.condition}</span>}
             </div>
           )}
           {listing.category === "wheels" && (listing.wheel_diameter || listing.wheel_brand || listing.bolt_pattern) && (
@@ -104,8 +104,12 @@ export default function ListingCard({ listing, isLoggedIn, showCategory = false,
               {listing.wheel_quantity && <span>Qty: {listing.wheel_quantity}</span>}
             </div>
           )}
+          {(listing.category === "part" || listing.category === "memorabilia") && listing.condition && (
+            <div style={styles.specsRow}>
+              <span>{listing.condition}</span>
+            </div>
+          )}
           <div style={styles.price}>{formatPrice(listing.price_eur)}</div>
-          <div style={styles.meta}>View details</div>
         </div>
       </Link>
 
@@ -127,6 +131,8 @@ const styles: Record<string, CSSProperties> = {
     gap: 0,
     position: "relative",
     overflow: "hidden",
+    transition: "transform 0.15s ease, box-shadow 0.15s ease",
+    cursor: "pointer",
   },
   cardLink: {
     textDecoration: "none",
@@ -164,6 +170,11 @@ const styles: Record<string, CSSProperties> = {
   listingTitle: {
     fontWeight: 900,
     color: "var(--green-900)",
+    display: "-webkit-box",
+    WebkitLineClamp: 2,
+    WebkitBoxOrient: "vertical",
+    overflow: "hidden",
+    lineHeight: 1.3,
   },
   specsRow: {
     display: "flex",
@@ -176,11 +187,7 @@ const styles: Record<string, CSSProperties> = {
   price: {
     fontWeight: 900,
     fontSize: 18,
-  },
-  meta: {
-    color: "var(--muted)",
-    fontWeight: 650,
-    fontSize: 13,
+    color: "var(--green-700)",
   },
   saveButtonWrap: {
     position: "absolute",

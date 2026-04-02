@@ -361,6 +361,12 @@ button, input, select, textarea {
   gap: 12px;
 }
 
+/* Listing card hover effect */
+.card:has(> a[href^="/listings/"]):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.1);
+}
+
 /* Sticky filter section on browse page */
 .browse-filters {
   position: sticky;
