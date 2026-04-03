@@ -80,18 +80,16 @@ export default function ListingCard({ listing, isLoggedIn, showCategory = false,
         )}
         <div style={styles.cardContent}>
           <div style={styles.badges}>
-            {showCategory && <span className="pill">{labelCategory(listing.category)}</span>}
             {listing.location && <span className="pill">{listing.location}</span>}
           </div>
           <div style={styles.listingTitle}>{listing.title}</div>
-          {listing.category === "car" && (listing.year || listing.mileage_km || listing.transmission || listing.condition) && (
+          {listing.category === "car" && (listing.year || listing.mileage_km || listing.transmission) && (
             <div style={styles.specsRow}>
               {listing.year && <span>{listing.year}</span>}
               {listing.mileage_km !== null && listing.mileage_km !== undefined && (
                 <span>{formatMileage(listing.mileage_km)}</span>
               )}
               {listing.transmission && <span>{listing.transmission}</span>}
-              {listing.condition && <span>{listing.condition}</span>}
             </div>
           )}
           {listing.category === "wheels" && (listing.wheel_diameter || listing.wheel_brand || listing.bolt_pattern) && (
@@ -102,11 +100,6 @@ export default function ListingCard({ listing, isLoggedIn, showCategory = false,
               {listing.bolt_pattern && <span>{listing.bolt_pattern}</span>}
               {listing.wheel_brand && <span>{listing.wheel_brand}</span>}
               {listing.wheel_quantity && <span>Qty: {listing.wheel_quantity}</span>}
-            </div>
-          )}
-          {(listing.category === "part" || listing.category === "memorabilia") && listing.condition && (
-            <div style={styles.specsRow}>
-              <span>{listing.condition}</span>
             </div>
           )}
           <div style={styles.price}>{formatPrice(listing.price_eur)}</div>
