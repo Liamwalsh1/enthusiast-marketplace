@@ -42,32 +42,32 @@ export default async function Home() {
       </section>
 
       {/* Trust signals */}
-      <section style={styles.trustBar}>
-        <div style={styles.trustItem}>
+      <section style={styles.trustBar} className="trust-bar">
+        <div style={styles.trustItem} className="trust-bar-item">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={styles.trustIcon}>
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
             <polyline points="9 12 11 14 15 10" />
           </svg>
           <span>Verified listings</span>
         </div>
-        <div style={styles.trustDivider} />
-        <div style={styles.trustItem}>
+        <div style={styles.trustDivider} className="trust-bar-divider" />
+        <div style={styles.trustItem} className="trust-bar-item">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={styles.trustIcon}>
             <circle cx="12" cy="12" r="10" />
             <line x1="2" y1="12" x2="22" y2="12" />
             <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
           </svg>
-          <span>Ireland-based marketplace</span>
+          <span>Ireland-based</span>
         </div>
-        <div style={styles.trustDivider} />
-        <div style={styles.trustItem}>
+        <div style={styles.trustDivider} className="trust-bar-divider" />
+        <div style={styles.trustItem} className="trust-bar-item">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={styles.trustIcon}>
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
           </svg>
           <span>Secure messaging</span>
         </div>
-        <div style={styles.trustDivider} />
-        <div style={styles.trustItem}>
+        <div style={styles.trustDivider} className="trust-bar-divider" />
+        <div style={styles.trustItem} className="trust-bar-item">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={styles.trustIcon}>
             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
           </svg>
@@ -77,7 +77,7 @@ export default async function Home() {
 
       {featuredListings.length > 0 && (
         <section>
-          <h2 style={styles.sectionTitle}>Featured Listings</h2>
+          <h2 style={styles.sectionTitle} className="section-title">Featured Listings</h2>
           <div className="grid-4">
             {featuredListings.map((listing, index) => (
               <ListingCard
@@ -93,7 +93,7 @@ export default async function Home() {
       )}
 
       <section>
-        <h2 style={styles.sectionTitle}>Browse by Category</h2>
+        <h2 style={styles.sectionTitle} className="section-title">Browse by Category</h2>
         <div className="category-grid">
           <Link href="/cars" className="card category-card">
             <div className="category-icon">
