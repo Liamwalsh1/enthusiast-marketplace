@@ -46,14 +46,7 @@ function formatMileage(km: number | null | undefined) {
   return new Intl.NumberFormat("en-IE").format(km) + " km";
 }
 
-function labelCategory(cat: CategoryType) {
-  if (cat === "car") return "Car";
-  if (cat === "wheels") return "Wheels";
-  if (cat === "part") return "Part";
-  return "Memorabilia";
-}
-
-export default function ListingCard({ listing, isLoggedIn, showCategory = false, priority = false }: Props) {
+export default function ListingCard({ listing, isLoggedIn, showCategory: _showCategory = false, priority = false }: Props) {
   const isSold = listing.status === "sold";
 
   const blurDataUrl = listing.blur_data_urls?.[0];
@@ -79,10 +72,8 @@ export default function ListingCard({ listing, isLoggedIn, showCategory = false,
           <div style={styles.noImage}>No image</div>
         )}
         <div style={styles.cardContent}>
-          <div style={styles.badges}>
-            {listing.location && <span className="pill">{listing.location}</span>}
-          </div>
           <div style={styles.listingTitle}>{listing.title}</div>
+          {listing.location && <div style={styles.location}>{listing.location}</div>}
           {listing.category === "car" && (listing.year || listing.mileage_km || listing.transmission) && (
             <div style={styles.specsRow}>
               {listing.year && <span>{listing.year}</span>}
@@ -168,6 +159,13 @@ const styles: Record<string, CSSProperties> = {
     WebkitBoxOrient: "vertical",
     overflow: "hidden",
     lineHeight: 1.3,
+  },
+  location: {
+    fontSize: 12,
+    fontWeight: 650,
+    color: "var(--muted)",
+    textTransform: "uppercase" as const,
+    letterSpacing: 0.4,
   },
   specsRow: {
     display: "flex",
