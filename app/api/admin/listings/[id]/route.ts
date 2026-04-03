@@ -8,16 +8,11 @@ export async function DELETE(
   const { id } = await params;
   const supabase = await createServerSupabaseClient();
 
-  // Check auth
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+  const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Check if current user is admin
   const { data: role } = await supabase
     .from("user_roles")
     .select("role")
@@ -28,7 +23,26 @@ export async function DELETE(
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  // Delete the listing
+  // Delete related records first to avoid foreign key constraint errors
+  await Promise.all([
+    supabase.from("saved_listings").delete().eq("listing_id", id),
+    supabase.from("listing_views").delete().eq("listing_id", id),
+    supabase.from("comments").delete().eq("listing_id", id),
+    supabase.from("reviews").delete().eq("listing_id", id),
+  ]);
+
+  // Delete message threads and their messages
+  const { data: threads } = await supabase
+    .from("message_threads")
+    .select("id")
+    .eq("listing_id", id);
+
+  if (threads && threads.length > 0) {
+    const threadIds = threads.map((t) => t.id);
+    await supabase.from("messages").delete().in("thread_id", threadIds);
+    await supabase.from("message_threads").delete().in("id", threadIds);
+  }
+
   const { error } = await supabase.from("listings").delete().eq("id", id);
 
   if (error) {

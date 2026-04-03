@@ -26,6 +26,26 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "No IDs provided" }, { status: 400 });
   }
 
+  // Delete related records first to avoid foreign key constraint errors
+  await Promise.all([
+    supabase.from("saved_listings").delete().in("listing_id", ids),
+    supabase.from("listing_views").delete().in("listing_id", ids),
+    supabase.from("comments").delete().in("listing_id", ids),
+    supabase.from("reviews").delete().in("listing_id", ids),
+  ]);
+
+  // Delete message threads and their messages
+  const { data: threads } = await supabase
+    .from("message_threads")
+    .select("id")
+    .in("listing_id", ids);
+
+  if (threads && threads.length > 0) {
+    const threadIds = threads.map((t) => t.id);
+    await supabase.from("messages").delete().in("thread_id", threadIds);
+    await supabase.from("message_threads").delete().in("id", threadIds);
+  }
+
   const { error } = await supabase.from("listings").delete().in("id", ids);
 
   if (error) {
