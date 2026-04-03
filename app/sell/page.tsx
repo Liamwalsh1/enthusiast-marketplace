@@ -314,7 +314,7 @@ function SellPageContent() {
       const updatePayload: Record<string, unknown> = {};
 
       if (files.length > 0) {
-        const { urls: imageUrls, blurDataUrls } = await uploadImages(data.id, files.slice(0, 5), user.id);
+        const { urls: imageUrls, blurDataUrls } = await uploadImages(data.id, files.slice(0, 20), user.id);
         updatePayload.image_urls = imageUrls;
         updatePayload.blur_data_urls = blurDataUrls;
       }
@@ -723,7 +723,7 @@ function SellPageContent() {
               placeholder="Spec, history, condition, extras…"
             />
 
-            <label style={styles.label}>Photos (up to 5)</label>
+            <label style={styles.label}>Photos (up to 20)</label>
             <input
               className="input"
               type="file"
