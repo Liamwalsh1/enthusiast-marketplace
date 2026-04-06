@@ -25,7 +25,8 @@ export default function SiteFooter() {
               <Link href="/messages" style={styles.link}>Messages</Link>
             </div>
             <div style={styles.linkGroup}>
-              <div style={styles.linkHeading}>Legal</div>
+              <div style={styles.linkHeading}>Help</div>
+              <Link href="/faq" style={styles.link}>FAQ</Link>
               <Link href="/terms" style={styles.link}>Terms of Service</Link>
               <Link href="/privacy" style={styles.link}>Privacy Policy</Link>
               <Link href="/cookies" style={styles.link}>Cookie Policy</Link>
