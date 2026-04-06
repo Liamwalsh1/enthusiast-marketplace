@@ -98,11 +98,10 @@ export default async function Home() {
           <Link href="/cars" className="card category-card">
             <div className="category-icon">
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                {/* Car body */}
-                <path d="M2 15 L4 12 L8 9 L16 9 L20 12 L22 14 L22 15 Z" />
-                {/* Wheels */}
-                <circle cx="6.5" cy="17" r="2" />
-                <circle cx="17.5" cy="17" r="2" />
+                {/* Smooth fastback silhouette with curved wheel arches */}
+                <path d="M2 17 C3 14 5 12 7 12 L9 12 C10 10 11 8 12 8 L15 8 C17 8 19 10 20 13 L22 17 L20 17 C19 14 15 14 14 17 L10 17 C9 14 5 14 4 17 Z" />
+                {/* Window */}
+                <path d="M10 12 L11 9 L15 9 L17 12 Z" />
               </svg>
             </div>
             <div className="category-label">Cars</div>
