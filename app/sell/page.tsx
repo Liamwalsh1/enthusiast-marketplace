@@ -74,6 +74,9 @@ function SellPageContent() {
   const [wheelMaterial, setWheelMaterial] = useState("");
   const [wheelStyle, setWheelStyle] = useState("");
 
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [showPhone, setShowPhone] = useState(false);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
@@ -265,6 +268,8 @@ function SellPageContent() {
       description: description.trim() || null,
       owner_id: user.id,
       status: "pending",
+      phone_number: phoneNumber.trim() || null,
+      show_phone: phoneNumber.trim() ? showPhone : false,
     };
 
     if (category === "car") {
@@ -722,6 +727,28 @@ function SellPageContent() {
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Spec, history, condition, extras…"
             />
+
+            <label style={styles.label}>
+              Phone Number <span style={{ fontWeight: 600, opacity: 0.6 }}>(optional)</span>
+            </label>
+            <input
+              className="input"
+              type="tel"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              placeholder="e.g. 085 123 4567"
+            />
+            {phoneNumber.trim() && (
+              <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6, cursor: "pointer", fontSize: 14, fontWeight: 650, color: "var(--text)" }}>
+                <input
+                  type="checkbox"
+                  checked={showPhone}
+                  onChange={(e) => setShowPhone(e.target.checked)}
+                  style={{ width: 16, height: 16, cursor: "pointer" }}
+                />
+                Show my phone number on the listing
+              </label>
+            )}
 
             <label style={styles.label}>Photos (up to 20)</label>
             <input
