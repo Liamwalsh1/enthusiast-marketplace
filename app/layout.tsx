@@ -1,5 +1,6 @@
 import "./globals.css";
 import type { Metadata } from "next";
+import { Analytics } from "@vercel/analytics/react";
 import SiteHeader from "./SiteHeader";
 import SiteFooter from "./SiteFooter";
 import ToastProvider from "./components/ToastProvider";
@@ -59,6 +60,7 @@ export default function RootLayout({
           {children}
           <SiteFooter />
           <CookieBanner />
+          <Analytics />
         </ToastProvider>
       </body>
     </html>
