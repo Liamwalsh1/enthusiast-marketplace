@@ -112,10 +112,16 @@ export default async function Home() {
           <Link href="/wheels" className="card category-card">
             <div className="category-icon">
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                {/* Outer tyre */}
                 <circle cx="12" cy="12" r="10" />
-                <circle cx="12" cy="12" r="7" />
+                {/* Inner hub ring */}
                 <circle cx="12" cy="12" r="3" />
-                <circle cx="12" cy="12" r="1" fill="currentColor" />
+                {/* 5 spokes */}
+                <line x1="12" y1="9" x2="12" y2="2" />
+                <line x1="12" y1="9" x2="19.2" y2="13.5" />
+                <line x1="12" y1="9" x2="16.5" y2="21.2" />
+                <line x1="12" y1="9" x2="7.5" y2="21.2" />
+                <line x1="12" y1="9" x2="4.8" y2="13.5" />
               </svg>
             </div>
             <div className="category-label">Wheels</div>
