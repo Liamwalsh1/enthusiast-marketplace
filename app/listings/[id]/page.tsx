@@ -5,6 +5,7 @@ import MessageSellerCard from "@/app/components/MessageSellerCard";
 import SellerControls from "@/app/components/SellerControls";
 import CommentSection from "@/app/components/CommentSection";
 import SaveListingButton from "@/app/components/SaveListingButton";
+import ShareButton from "@/app/components/ShareButton";
 import SellerReviewsSection from "@/app/components/SellerReviewsSection";
 import TrackRecentlyViewed from "@/app/components/TrackRecentlyViewed";
 import PromotionCard from "@/app/components/PromotionCard";
@@ -367,9 +368,12 @@ export default async function ListingDetailPage({
                   </span>
                 )}
               </div>
-              {!isOwner && (
-                <SaveListingButton listingId={listing.id} isLoggedIn={!!user} />
-              )}
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <ShareButton title={listing.title} url={`${siteUrl}/listings/${listing.id}`} />
+                {!isOwner && (
+                  <SaveListingButton listingId={listing.id} isLoggedIn={!!user} />
+                )}
+              </div>
             </div>
 
             <div className="listing-price">
