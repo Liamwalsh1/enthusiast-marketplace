@@ -189,8 +189,8 @@ export default function CookiePolicyPage() {
           <h2 style={h2Style}>7. Contact Us</h2>
           <p>
             If you have questions about our use of cookies, please contact us at{" "}
-            <a href="mailto:privacy@passiondriven.ie" style={linkStyle}>
-              privacy@passiondriven.ie
+            <a href="mailto:info@passiondriven.ie" style={linkStyle}>
+              info@passiondriven.ie
             </a>
           </p>
         </section>

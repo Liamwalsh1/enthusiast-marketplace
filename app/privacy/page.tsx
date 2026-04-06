@@ -116,8 +116,8 @@ export default function PrivacyPage() {
           </ul>
           <p>
             To exercise these rights, please contact us at{" "}
-            <a href="mailto:privacy@passiondriven.ie" style={linkStyle}>
-              privacy@passiondriven.ie
+            <a href="mailto:info@passiondriven.ie" style={linkStyle}>
+              info@passiondriven.ie
             </a>
           </p>
         </section>
@@ -163,7 +163,7 @@ export default function PrivacyPage() {
             If you have questions about this Privacy Policy or wish to exercise your rights, contact us at:
           </p>
           <ul style={listStyle}>
-            <li>Email: <a href="mailto:privacy@passiondriven.ie" style={linkStyle}>privacy@passiondriven.ie</a></li>
+            <li>Email: <a href="mailto:info@passiondriven.ie" style={linkStyle}>info@passiondriven.ie</a></li>
             <li>Data Protection Officer: <a href="mailto:dpo@passiondriven.ie" style={linkStyle}>dpo@passiondriven.ie</a></li>
           </ul>
           <p>
