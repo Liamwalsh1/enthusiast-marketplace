@@ -709,16 +709,20 @@ function SellPageContent() {
               ))}
             </select>
 
-            <label style={styles.label}>Condition</label>
-            <select
-              className="select"
-              value={condition}
-              onChange={(e) => setCondition(e.target.value)}
-            >
-              <option>New</option>
-              <option>Used</option>
-              <option>Refurbished</option>
-            </select>
+            {category !== "car" && (
+              <>
+                <label style={styles.label}>Condition</label>
+                <select
+                  className="select"
+                  value={condition}
+                  onChange={(e) => setCondition(e.target.value)}
+                >
+                  <option>New</option>
+                  <option>Used</option>
+                  <option>Refurbished</option>
+                </select>
+              </>
+            )}
 
             <label style={styles.label}>Description</label>
             <textarea

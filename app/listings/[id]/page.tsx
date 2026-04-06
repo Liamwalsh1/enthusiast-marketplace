@@ -311,7 +311,9 @@ export default async function ListingDetailPage({
             >
               <span className="pill">{labelCategory(listing.category)}</span>
               <span className="pill">{listing.location ?? "—"}</span>
-              <span className="pill">{listing.condition ?? "—"}</span>
+              {listing.category !== "car" && (
+                <span className="pill">{listing.condition ?? "—"}</span>
+              )}
             </div>
 
             <div
