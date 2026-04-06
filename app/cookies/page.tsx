@@ -13,7 +13,7 @@ export default function CookiePolicyPage() {
       </Link>
 
       <h1 style={h1Style}>Cookie Policy</h1>
-      <p style={updatedStyle}>Last updated: January 2025</p>
+      <p style={updatedStyle}>Last updated: April 2026</p>
 
       <div style={contentStyle}>
         <section style={sectionStyle}>
@@ -74,11 +74,6 @@ export default function CookiePolicyPage() {
               </thead>
               <tbody>
                 <tr>
-                  <td style={tdStyle}>theme</td>
-                  <td style={tdStyle}>Remembers your display preferences</td>
-                  <td style={tdStyle}>1 year</td>
-                </tr>
-                <tr>
                   <td style={tdStyle}>recent-searches</td>
                   <td style={tdStyle}>Stores your recent search history</td>
                   <td style={tdStyle}>30 days</td>
@@ -103,14 +98,9 @@ export default function CookiePolicyPage() {
               </thead>
               <tbody>
                 <tr>
-                  <td style={tdStyle}>_ga</td>
-                  <td style={tdStyle}>Google Analytics - distinguishes users</td>
-                  <td style={tdStyle}>2 years</td>
-                </tr>
-                <tr>
-                  <td style={tdStyle}>_gid</td>
-                  <td style={tdStyle}>Google Analytics - distinguishes users</td>
-                  <td style={tdStyle}>24 hours</td>
+                  <td style={tdStyle}>va-*</td>
+                  <td style={tdStyle}>Vercel Analytics - anonymous page view tracking</td>
+                  <td style={tdStyle}>Session</td>
                 </tr>
               </tbody>
             </table>
@@ -124,7 +114,7 @@ export default function CookiePolicyPage() {
             accept or reject non-essential cookies. You can change your preferences at any time by:
           </p>
           <ul style={listStyle}>
-            <li>Clicking the &quot;Cookie Settings&quot; link in the footer</li>
+            <li>Clearing your browser cookies to reset your preferences (the banner will reappear on your next visit)</li>
             <li>Adjusting your browser settings to block or delete cookies</li>
           </ul>
           <p>
@@ -169,7 +159,7 @@ export default function CookiePolicyPage() {
           </p>
           <ul style={listStyle}>
             <li><strong>Supabase:</strong> For authentication and data storage</li>
-            <li><strong>Google Analytics:</strong> For website analytics (if you consent)</li>
+            <li><strong>Vercel Analytics:</strong> For anonymous website analytics (if you consent)</li>
           </ul>
           <p>
             These third parties have their own privacy policies governing the use of cookies.
