@@ -13,7 +13,7 @@ export default function PrivacyPage() {
       </Link>
 
       <h1 style={h1Style}>Privacy Policy</h1>
-      <p style={updatedStyle}>Last updated: January 2025</p>
+      <p style={updatedStyle}>Last updated: April 2026</p>
 
       <div style={contentStyle}>
         <section style={sectionStyle}>
@@ -164,7 +164,6 @@ export default function PrivacyPage() {
           </p>
           <ul style={listStyle}>
             <li>Email: <a href="mailto:info@passiondriven.ie" style={linkStyle}>info@passiondriven.ie</a></li>
-            <li>Data Protection Officer: <a href="mailto:dpo@passiondriven.ie" style={linkStyle}>dpo@passiondriven.ie</a></li>
           </ul>
           <p>
             You also have the right to lodge a complaint with the Irish Data Protection Commission
