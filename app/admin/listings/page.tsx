@@ -14,6 +14,7 @@ type ListingRow = {
   created_at: string;
   owner_id: string;
   is_featured: boolean;
+  editors_choice: boolean;
 };
 
 export const dynamic = "force-dynamic";
@@ -51,7 +52,7 @@ export default async function AdminListingsPage({
   // Build query
   let query = supabase
     .from("listings")
-    .select("id, title, category, price_eur, location, status, created_at, owner_id, is_featured")
+    .select("id, title, category, price_eur, location, status, created_at, owner_id, is_featured, editors_choice")
     .order("created_at", { ascending: false });
 
   if (statusFilter !== "all") {

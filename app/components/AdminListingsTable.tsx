@@ -14,6 +14,7 @@ type Listing = {
   created_at: string;
   owner_id: string;
   is_featured: boolean;
+  editors_choice: boolean;
 };
 
 type Props = {
@@ -154,6 +155,20 @@ function AdminListingRow({
   const [showReject, setShowReject] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
   const [featuring, setFeaturing] = useState(false);
+  const [settingEditorsChoice, setSettingEditorsChoice] = useState(false);
+
+  async function handleEditorsChoice() {
+    if (settingEditorsChoice) return;
+    setSettingEditorsChoice(true);
+    try {
+      const res = await fetch(`/api/admin/listings/${listing.id}/editors-choice`, {
+        method: listing.editors_choice ? "DELETE" : "POST",
+      });
+      if (res.ok) router.refresh();
+    } finally {
+      setSettingEditorsChoice(false);
+    }
+  }
 
   async function handleApprove() {
     setLoading(true);
@@ -220,6 +235,9 @@ function AdminListingRow({
         </td>
         <td style={tdStyle}>
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            {listing.editors_choice && (
+              <span title="Editor's Choice" style={{ color: "var(--green-900)", fontSize: 16 }}>✦</span>
+            )}
             {listing.is_featured && (
               <span title="Featured" style={{ color: "rgba(234,179,8,1)", fontSize: 16 }}>★</span>
             )}
@@ -268,22 +286,40 @@ function AdminListingRow({
               </button>
             )}
             {listing.status === "active" && (
-              <button
-                onClick={handleFeature}
-                disabled={featuring}
-                style={{
-                  fontSize: 11,
-                  padding: "4px 10px",
-                  borderRadius: 6,
-                  border: listing.is_featured ? "1px solid rgba(234,179,8,0.4)" : "1px solid var(--border)",
-                  background: listing.is_featured ? "rgba(234,179,8,0.15)" : "var(--soft)",
-                  color: listing.is_featured ? "rgba(161,98,7,1)" : "var(--green-900)",
-                  fontWeight: 700,
-                  cursor: featuring ? "wait" : "pointer",
-                }}
-              >
-                {featuring ? "..." : listing.is_featured ? "★ Unfeature" : "☆ Feature"}
-              </button>
+              <>
+                <button
+                  onClick={handleFeature}
+                  disabled={featuring}
+                  style={{
+                    fontSize: 11,
+                    padding: "4px 10px",
+                    borderRadius: 6,
+                    border: listing.is_featured ? "1px solid rgba(234,179,8,0.4)" : "1px solid var(--border)",
+                    background: listing.is_featured ? "rgba(234,179,8,0.15)" : "var(--soft)",
+                    color: listing.is_featured ? "rgba(161,98,7,1)" : "var(--green-900)",
+                    fontWeight: 700,
+                    cursor: featuring ? "wait" : "pointer",
+                  }}
+                >
+                  {featuring ? "..." : listing.is_featured ? "★ Unfeature" : "☆ Feature"}
+                </button>
+                <button
+                  onClick={handleEditorsChoice}
+                  disabled={settingEditorsChoice}
+                  style={{
+                    fontSize: 11,
+                    padding: "4px 10px",
+                    borderRadius: 6,
+                    border: listing.editors_choice ? "1px solid rgba(11,47,26,0.4)" : "1px solid var(--border)",
+                    background: listing.editors_choice ? "rgba(11,47,26,0.12)" : "var(--soft)",
+                    color: listing.editors_choice ? "var(--green-900)" : "var(--green-900)",
+                    fontWeight: 700,
+                    cursor: settingEditorsChoice ? "wait" : "pointer",
+                  }}
+                >
+                  {settingEditorsChoice ? "..." : listing.editors_choice ? "✦ Unset Choice" : "✦ Editor's Choice"}
+                </button>
+              </>
             )}
             <button
               onClick={handleDelete}

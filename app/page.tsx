@@ -1,6 +1,7 @@
 import Link from "next/link";
 import SearchBox from "./components/SearchBox";
 import ListingCard from "./components/ListingCard";
+import EditorsChoiceCard from "./components/EditorsChoiceCard";
 import { createServerSupabaseClient } from "@/app/lib/supabase/server";
 
 export default async function Home() {
@@ -11,6 +12,16 @@ export default async function Home() {
     data: { user },
   } = await supabase.auth.getUser();
   const isLoggedIn = !!user;
+
+  // Fetch editor's choice listing
+  const { data: editorsChoiceData } = await supabase
+    .from("listings")
+    .select("id, title, category, price_eur, location, description, image_urls, blur_data_urls, make, model, year, mileage_km, transmission")
+    .eq("editors_choice", true)
+    .eq("status", "active")
+    .maybeSingle();
+
+  const editorsChoice = editorsChoiceData ?? null;
 
   // Fetch featured listings (both admin-featured and paid-featured)
   const { data: featured } = await supabase
@@ -74,6 +85,13 @@ export default async function Home() {
           <span>Enthusiast specialists</span>
         </div>
       </section>
+
+      {editorsChoice && (
+        <section>
+          <h2 style={styles.sectionTitle} className="section-title">Editor&apos;s Choice</h2>
+          <EditorsChoiceCard listing={editorsChoice} />
+        </section>
+      )}
 
       {featuredListings.length > 0 && (
         <section>
