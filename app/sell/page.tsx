@@ -55,7 +55,9 @@ function SellPageContent() {
 
   // Car-specific fields
   const [make, setMake] = useState("");
+  const [customMake, setCustomMake] = useState("");
   const [model, setModel] = useState("");
+  const [customModel, setCustomModel] = useState("");
   const [year, setYear] = useState("");
   const [transmission, setTransmission] = useState("");
   const [mileageKm, setMileageKm] = useState("");
@@ -201,14 +203,18 @@ function SellPageContent() {
       return;
     }
 
+    // Resolve custom make/model values
+    const resolvedMake = make === "Other" ? customMake.trim() : make.trim();
+    const resolvedModel = (make === "Other" || model === "Other") ? customModel.trim() : model.trim();
+
     // Car-specific validation
     if (category === "car") {
-      if (!make.trim()) {
-        setErrorMsg("Please select a make.");
+      if (!resolvedMake) {
+        setErrorMsg(make === "Other" ? "Please enter the make." : "Please select a make.");
         return;
       }
-      if (!model.trim()) {
-        setErrorMsg("Please select a model.");
+      if (!resolvedModel) {
+        setErrorMsg(model === "Other" || make === "Other" ? "Please enter the model." : "Please select a model.");
         return;
       }
       if (!year.trim()) {
@@ -273,8 +279,8 @@ function SellPageContent() {
     };
 
     if (category === "car") {
-      insertPayload.make = make.trim() || null;
-      insertPayload.model = model.trim() || null;
+      insertPayload.make = resolvedMake || null;
+      insertPayload.model = resolvedModel || null;
       insertPayload.year = Number.isFinite(yearInt) ? yearInt : null;
       insertPayload.transmission = transmission || null;
       insertPayload.mileage_km = Number.isFinite(mileageInt) ? mileageInt : null;
@@ -408,32 +414,59 @@ function SellPageContent() {
                       value={make}
                       onChange={(e) => {
                         setMake(e.target.value);
-                        setModel(""); // Reset model when make changes
+                        setModel("");
+                        setCustomMake("");
+                        setCustomModel("");
                       }}
                     >
                       <option value="">Select make...</option>
                       {CAR_MAKES.map((m) => (
-                        <option key={m} value={m}>
-                          {m}
-                        </option>
+                        <option key={m} value={m}>{m}</option>
                       ))}
+                      <option value="Other">Other</option>
                     </select>
+                    {make === "Other" && (
+                      <input
+                        className="input"
+                        style={{ marginTop: 8 }}
+                        value={customMake}
+                        onChange={(e) => setCustomMake(e.target.value)}
+                        placeholder="Enter make..."
+                      />
+                    )}
                   </div>
                   <div>
                     <label style={styles.label}>Model</label>
-                    <select
-                      className="select"
-                      value={model}
-                      onChange={(e) => setModel(e.target.value)}
-                      disabled={!make}
-                    >
-                      <option value="">{make ? "Select model..." : "Select make first"}</option>
-                      {make && CAR_MODELS_BY_MAKE[make]?.map((m) => (
-                        <option key={m} value={m}>
-                          {m}
-                        </option>
-                      ))}
-                    </select>
+                    {make === "Other" ? (
+                      <input
+                        className="input"
+                        value={customModel}
+                        onChange={(e) => setCustomModel(e.target.value)}
+                        placeholder="Enter model..."
+                      />
+                    ) : (
+                      <select
+                        className="select"
+                        value={model}
+                        onChange={(e) => setModel(e.target.value)}
+                        disabled={!make}
+                      >
+                        <option value="">{make ? "Select model..." : "Select make first"}</option>
+                        {make && CAR_MODELS_BY_MAKE[make]?.map((m) => (
+                          <option key={m} value={m}>{m}</option>
+                        ))}
+                        <option value="Other">Other</option>
+                      </select>
+                    )}
+                    {make !== "Other" && model === "Other" && (
+                      <input
+                        className="input"
+                        style={{ marginTop: 8 }}
+                        value={customModel}
+                        onChange={(e) => setCustomModel(e.target.value)}
+                        placeholder="Enter model..."
+                      />
+                    )}
                   </div>
                 </div>
 
