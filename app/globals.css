@@ -478,6 +478,22 @@ button, input, select, textarea {
     grid-template-columns: 1fr;
   }
 
+  .grid-3.grid-compact-mobile {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .browse-grid-toggle {
+    display: flex;
+  }
+}
+
+@media (min-width: 601px) {
+  .browse-grid-toggle {
+    display: none;
+  }
+}
+
   .grid-4 {
     grid-template-columns: repeat(2, 1fr);
     gap: 12px;

@@ -104,6 +104,7 @@ function BrowsePageContent() {
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [compactGrid, setCompactGrid] = useState(false);
   const [initializedFromUrl, setInitializedFromUrl] = useState(false);
 
   // Save search modal state
@@ -431,11 +432,56 @@ function BrowsePageContent() {
   return (
     <main className="container">
       <div className="page-top-row">
-        <div>
-          <h1 className="page-title">Browse</h1>
-          <p style={styles.p}>
-            {loading ? "Loading..." : `${totalCount} listing${totalCount !== 1 ? "s" : ""} found`}
-          </p>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div>
+            <h1 className="page-title">Browse</h1>
+            <p style={styles.p}>
+              {loading ? "Loading..." : `${totalCount} listing${totalCount !== 1 ? "s" : ""} found`}
+            </p>
+          </div>
+          <div className="browse-grid-toggle" style={{ gap: 4 }}>
+            <button
+              onClick={() => setCompactGrid(false)}
+              title="List view"
+              style={{
+                padding: 7,
+                borderRadius: 8,
+                border: "1px solid var(--border)",
+                background: compactGrid ? "var(--soft)" : "var(--green-900)",
+                color: compactGrid ? "var(--muted)" : "white",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+              }}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <line x1="3" y1="12" x2="21" y2="12" />
+                <line x1="3" y1="18" x2="21" y2="18" />
+              </svg>
+            </button>
+            <button
+              onClick={() => setCompactGrid(true)}
+              title="Grid view"
+              style={{
+                padding: 7,
+                borderRadius: 8,
+                border: "1px solid var(--border)",
+                background: compactGrid ? "var(--green-900)" : "var(--soft)",
+                color: compactGrid ? "white" : "var(--muted)",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+              }}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <rect x="3" y="3" width="8" height="8" />
+                <rect x="13" y="3" width="8" height="8" />
+                <rect x="3" y="13" width="8" height="8" />
+                <rect x="13" y="13" width="8" height="8" />
+              </svg>
+            </button>
+          </div>
         </div>
         <Link className="btn btn-primary" href="/sell">
           Post an ad
@@ -893,7 +939,7 @@ function BrowsePageContent() {
         </section>
       ) : (
         <>
-          <section style={{ marginTop: 14 }} className="grid-3">
+          <section style={{ marginTop: 14 }} className={`grid-3${compactGrid ? " grid-compact-mobile" : ""}`}>
             {listings.map((l) => (
               <ListingCard key={l.id} listing={l} isLoggedIn={isLoggedIn} showCategory />
             ))}
