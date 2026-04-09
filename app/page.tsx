@@ -133,8 +133,8 @@ export default async function Home() {
               <img
                 src="/wheel-logo.png"
                 alt="Wheels"
-                width={96}
-                height={96}
+                width={77}
+                height={77}
                 style={{ objectFit: "contain", mixBlendMode: "multiply" }}
               />
             </div>
