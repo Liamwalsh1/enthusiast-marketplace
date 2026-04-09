@@ -119,12 +119,9 @@ export default async function Home() {
               <img
                 src="/car-logo.png"
                 alt="Cars"
-                width={48}
-                height={32}
-                style={{
-                  objectFit: "contain",
-                  filter: "invert(11%) sepia(46%) saturate(632%) hue-rotate(102deg) brightness(97%) contrast(97%)",
-                }}
+                width={52}
+                height={34}
+                style={{ objectFit: "contain" }}
               />
             </div>
             <div className="category-label">Cars</div>
