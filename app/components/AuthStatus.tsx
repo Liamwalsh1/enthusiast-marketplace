@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/app/lib/supabaseClient";
@@ -12,6 +12,7 @@ type Props = {
 
 export default function AuthStatus({ initialUserEmail }: Props) {
   const router = useRouter();
+  const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [hydrated, setHydrated] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -61,6 +62,7 @@ export default function AuthStatus({ initialUserEmail }: Props) {
       setUser(session?.user ?? null);
       if (event === "SIGNED_IN" || event === "SIGNED_OUT") {
         if (refreshGuard.current) return;
+        if (pathname === "/login") return;
         refreshGuard.current = true;
         router.refresh();
         setTimeout(() => {
