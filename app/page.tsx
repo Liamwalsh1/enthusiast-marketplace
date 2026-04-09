@@ -121,7 +121,7 @@ export default async function Home() {
                 alt="Cars"
                 width={52}
                 height={34}
-                style={{ objectFit: "contain" }}
+                style={{ objectFit: "contain", mixBlendMode: "multiply" }}
               />
             </div>
             <div className="category-label">Cars</div>
