@@ -114,7 +114,7 @@ export default async function Home() {
         <h2 style={styles.sectionTitle} className="section-title">Browse by Category</h2>
         <div className="category-grid">
           <Link href="/cars" className="card category-card">
-            <div className="category-icon" style={{ background: "none" }}>
+            <div className="category-icon" style={{ background: "none", width: "auto", height: "auto" }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/car-logo.png"
