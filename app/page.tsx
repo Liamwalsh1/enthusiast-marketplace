@@ -114,13 +114,13 @@ export default async function Home() {
         <h2 style={styles.sectionTitle} className="section-title">Browse by Category</h2>
         <div className="category-grid">
           <Link href="/cars" className="card category-card">
-            <div className="category-icon">
+            <div className="category-icon" style={{ background: "none" }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/car-logo.png"
                 alt="Cars"
-                width={52}
-                height={34}
+                width={80}
+                height={52}
                 style={{ objectFit: "contain", mixBlendMode: "multiply" }}
               />
             </div>
