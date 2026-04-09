@@ -142,10 +142,15 @@ export default async function Home() {
             <div className="category-desc">Rims, tyres & sets</div>
           </Link>
           <Link href="/parts" className="card category-card">
-            <div className="category-icon">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
-              </svg>
+            <div className="category-icon" style={{ background: "none", width: "auto", height: "auto" }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/parts-logo.png"
+                alt="Parts"
+                width={62}
+                height={77}
+                style={{ objectFit: "contain", mixBlendMode: "multiply" }}
+              />
             </div>
             <div className="category-label">Parts</div>
             <div className="category-desc">Engine, body & interior</div>
