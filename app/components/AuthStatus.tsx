@@ -60,7 +60,7 @@ export default function AuthStatus({ initialUserEmail }: Props) {
     } = supabase.auth.onAuthStateChange((event, session) => {
       if (!isMounted) return;
       setUser(session?.user ?? null);
-      if (event === "SIGNED_IN" || event === "SIGNED_OUT") {
+      if (event === "SIGNED_IN") {
         if (refreshGuard.current) return;
         if (pathname === "/login") return;
         refreshGuard.current = true;
