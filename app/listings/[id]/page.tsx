@@ -8,7 +8,6 @@ import SaveListingButton from "@/app/components/SaveListingButton";
 import ShareButton from "@/app/components/ShareButton";
 import SellerReviewsSection from "@/app/components/SellerReviewsSection";
 import TrackRecentlyViewed from "@/app/components/TrackRecentlyViewed";
-import PromotionCard from "@/app/components/PromotionCard";
 import { createServerSupabaseClient } from "@/app/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -641,13 +640,6 @@ export default async function ListingDetailPage({
             {isOwner ? (
               <>
                 <SellerControls listingId={listing.id} status={listing.status ?? null} />
-                {listing.status === "active" && (
-                  <PromotionCard
-                    listingId={listing.id}
-                    boostedUntil={listing.boosted_until ?? null}
-                    featuredUntil={listing.featured_until ?? null}
-                  />
-                )}
               </>
             ) : isSold ? (
               <div className="card" style={{ padding: 16, display: "grid", gap: 8 }}>

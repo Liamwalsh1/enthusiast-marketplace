@@ -1,17 +1,11 @@
 import Link from "next/link";
 import SearchBox from "./components/SearchBox";
-import ListingCard from "./components/ListingCard";
 import EditorsChoiceCard from "./components/EditorsChoiceCard";
 import { createServerSupabaseClient } from "@/app/lib/supabase/server";
 
 export default async function Home() {
   const supabase = await createServerSupabaseClient();
 
-  // Check if user is logged in (for save button on listing cards)
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const isLoggedIn = !!user;
 
   // Fetch editor's choice listing
   const { data: editorsChoiceData } = await supabase
@@ -23,18 +17,6 @@ export default async function Home() {
 
   const editorsChoice = editorsChoiceData ?? null;
 
-  // Fetch featured listings (both admin-featured and paid-featured)
-  const { data: featured } = await supabase
-    .from("listings")
-    .select(
-      "id, title, category, price_eur, location, condition, status, image_urls, blur_data_urls, make, model, year, mileage_km, transmission, wheel_diameter, wheel_width, bolt_pattern, wheel_brand, wheel_quantity, is_featured, featured_until"
-    )
-    .eq("status", "active")
-    .or(`is_featured.eq.true,featured_until.gt.${new Date().toISOString()}`)
-    .order("featured_at", { ascending: false, nullsFirst: false })
-    .limit(4);
-
-  const featuredListings = featured ?? [];
 
   return (
     <main className="container">
@@ -93,22 +75,6 @@ export default async function Home() {
         </section>
       )}
 
-      {featuredListings.length > 0 && (
-        <section>
-          <h2 style={styles.sectionTitle} className="section-title">Featured Listings</h2>
-          <div className="grid-4">
-            {featuredListings.map((listing, index) => (
-              <ListingCard
-                key={listing.id}
-                listing={listing}
-                isLoggedIn={isLoggedIn}
-                showCategory
-                priority={index < 4}
-              />
-            ))}
-          </div>
-        </section>
-      )}
 
       <section>
         <h2 style={styles.sectionTitle} className="section-title">Browse by Category</h2>

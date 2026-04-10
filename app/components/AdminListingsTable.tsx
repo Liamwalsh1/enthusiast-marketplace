@@ -154,7 +154,6 @@ function AdminListingRow({
   const [loading, setLoading] = useState(false);
   const [showReject, setShowReject] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
-  const [featuring, setFeaturing] = useState(false);
   const [settingEditorsChoice, setSettingEditorsChoice] = useState(false);
 
   async function handleEditorsChoice() {
@@ -209,18 +208,6 @@ function AdminListingRow({
     }
   }
 
-  async function handleFeature() {
-    if (featuring) return;
-    setFeaturing(true);
-    try {
-      const res = await fetch(`/api/admin/listings/${listing.id}/feature`, {
-        method: listing.is_featured ? "DELETE" : "POST",
-      });
-      if (res.ok) router.refresh();
-    } finally {
-      setFeaturing(false);
-    }
-  }
 
   return (
     <>
@@ -287,22 +274,6 @@ function AdminListingRow({
             )}
             {listing.status === "active" && (
               <>
-                <button
-                  onClick={handleFeature}
-                  disabled={featuring}
-                  style={{
-                    fontSize: 11,
-                    padding: "4px 10px",
-                    borderRadius: 6,
-                    border: listing.is_featured ? "1px solid rgba(234,179,8,0.4)" : "1px solid var(--border)",
-                    background: listing.is_featured ? "rgba(234,179,8,0.15)" : "var(--soft)",
-                    color: listing.is_featured ? "rgba(161,98,7,1)" : "var(--green-900)",
-                    fontWeight: 700,
-                    cursor: featuring ? "wait" : "pointer",
-                  }}
-                >
-                  {featuring ? "..." : listing.is_featured ? "★ Unfeature" : "☆ Feature"}
-                </button>
                 <button
                   onClick={handleEditorsChoice}
                   disabled={settingEditorsChoice}
