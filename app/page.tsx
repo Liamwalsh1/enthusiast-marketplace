@@ -1,11 +1,14 @@
 import Link from "next/link";
 import SearchBox from "./components/SearchBox";
 import EditorsChoiceCard from "./components/EditorsChoiceCard";
+import ExploreSection from "./components/ExploreSection";
 import { createServerSupabaseClient } from "@/app/lib/supabase/server";
 
 export default async function Home() {
   const supabase = await createServerSupabaseClient();
 
+  const { data: { user } } = await supabase.auth.getUser();
+  const isLoggedIn = !!user;
 
   // Fetch editor's choice listing
   const { data: editorsChoiceData } = await supabase
@@ -75,6 +78,11 @@ export default async function Home() {
         </section>
       )}
 
+
+      <section>
+        <h2 style={styles.sectionTitle} className="section-title">Explore</h2>
+        <ExploreSection isLoggedIn={isLoggedIn} />
+      </section>
 
       <section>
         <h2 style={styles.sectionTitle} className="section-title">Browse by Category</h2>
