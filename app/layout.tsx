@@ -9,6 +9,9 @@ import CookieBanner from "./components/CookieBanner";
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://passiondriven.ie";
 
 export const metadata: Metadata = {
+  icons: {
+    icon: "/favicon.png",
+  },
   title: {
     default: "Passion Driven | Classic Cars, Parts & Memorabilia in Ireland",
     template: "%s | Passion Driven",
