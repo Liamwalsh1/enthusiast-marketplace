@@ -109,9 +109,14 @@ export default async function AdminListingsPage({
     <main className="container">
       <Link className="pill" href="/admin">← Back to dashboard</Link>
 
-      <h1 style={{ fontSize: 34, fontWeight: 950, color: "var(--green-900)", margin: "12px 0" }}>
-        All Listings
-      </h1>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "12px 0" }}>
+        <h1 style={{ fontSize: 34, fontWeight: 950, color: "var(--green-900)" }}>
+          All Listings
+        </h1>
+        <Link className="btn btn-primary" href="/admin/listings/new" style={{ whiteSpace: "nowrap" }}>
+          + Create listing
+        </Link>
+      </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12, marginBottom: 20 }}>
         <CountCard label="All" count={counts.all} active={statusFilter === "all"} href="/admin/listings" />
