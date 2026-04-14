@@ -700,7 +700,7 @@ export default async function ListingDetailPage({
         </div>
       )}
 
-      {listing && listing.owner_id && (
+      {listing && listing.owner_id && !listing.contact_name && (
         <SellerReviewsSection
           sellerId={listing.owner_id}
           listingId={listing.id}
