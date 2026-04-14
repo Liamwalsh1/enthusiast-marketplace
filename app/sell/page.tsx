@@ -788,6 +788,9 @@ function SellPageContent() {
             )}
 
             <label style={styles.label}>Photos (up to 20)</label>
+            <div style={{ color: "var(--muted)", fontWeight: 650, fontSize: 13, marginTop: 4, marginBottom: 6 }}>
+              Good lighting and multiple angles get more enquiries. Include the exterior, interior, engine bay, and any flaws.
+            </div>
             <input
               className="input"
               type="file"
