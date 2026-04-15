@@ -246,7 +246,14 @@ function LoginContent() {
             autoComplete="email"
           />
 
-          <label style={styles.label}>Password</label>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginTop: 12 }}>
+            <label style={{ fontWeight: 800, color: "var(--green-900)" }}>Password</label>
+            {mode === "signin" && (
+              <Link href="/forgot-password" style={{ fontSize: 13, fontWeight: 700, color: "var(--green-900)" }}>
+                Forgot password?
+              </Link>
+            )}
+          </div>
           <input
             className="input"
             type="password"
