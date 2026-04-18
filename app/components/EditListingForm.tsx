@@ -23,7 +23,10 @@ type Props = {
   initialTitle: string;
   initialPrice: number | null;
   initialLocation: string;
+  initialCondition: string;
   initialDescription: string;
+  initialPhoneNumber: string;
+  initialShowPhone: boolean;
   initialMake: string;
   initialModel: string;
   initialYear: number | null;
@@ -53,7 +56,10 @@ export default function EditListingForm({
   initialTitle,
   initialPrice,
   initialLocation,
+  initialCondition,
   initialDescription,
+  initialPhoneNumber,
+  initialShowPhone,
   initialMake,
   initialModel,
   initialYear,
@@ -78,7 +84,10 @@ export default function EditListingForm({
   const [title, setTitle] = useState(initialTitle);
   const [price, setPrice] = useState(initialPrice?.toString() ?? "");
   const [location, setLocation] = useState(initialLocation);
+  const [condition, setCondition] = useState(initialCondition);
   const [description, setDescription] = useState(initialDescription);
+  const [phoneNumber, setPhoneNumber] = useState(initialPhoneNumber);
+  const [showPhone, setShowPhone] = useState(initialShowPhone);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
@@ -313,7 +322,13 @@ export default function EditListingForm({
       price_eur: nextPrice,
       location: location || null,
       description: nextDescription || null,
+      phone_number: phoneNumber.trim() || null,
+      show_phone: phoneNumber.trim() ? showPhone : false,
     };
+
+    if (category !== "car") {
+      updatePayload.condition = condition.trim() || null;
+    }
 
     // Add car-specific fields if category is "car"
     if (category === "car") {
@@ -763,6 +778,40 @@ export default function EditListingForm({
         onChange={(e) => setDescription(e.target.value)}
         disabled={loading}
       />
+
+      {category !== "car" && (
+        <>
+          <label style={labelStyle}>Condition</label>
+          <select className="select" value={condition} onChange={(e) => setCondition(e.target.value)} disabled={loading}>
+            <option>New</option>
+            <option>Used</option>
+            <option>Refurbished</option>
+          </select>
+        </>
+      )}
+
+      <label style={labelStyle}>
+        Phone Number <span style={{ fontWeight: 600, opacity: 0.6 }}>(optional)</span>
+      </label>
+      <input
+        className="input"
+        type="tel"
+        value={phoneNumber}
+        onChange={(e) => setPhoneNumber(e.target.value)}
+        placeholder="e.g. 085 123 4567"
+        disabled={loading}
+      />
+      {phoneNumber.trim() && (
+        <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6, cursor: "pointer", fontSize: 14, fontWeight: 650, color: "var(--text)" }}>
+          <input
+            type="checkbox"
+            checked={showPhone}
+            onChange={(e) => setShowPhone(e.target.checked)}
+            style={{ width: 16, height: 16, cursor: "pointer" }}
+          />
+          Show my phone number on the listing
+        </label>
+      )}
 
       {/* Image Management Section */}
       <div style={sectionHeader}>Photos</div>
