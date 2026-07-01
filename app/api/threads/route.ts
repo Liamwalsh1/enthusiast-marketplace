@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/app/lib/supabase/server";
+import { sendNewMessageEmail } from "@/app/lib/email";
 
 type ThreadPayload = {
   listingId?: string;
@@ -103,6 +104,36 @@ export async function POST(request: Request) {
   }
 
   await supabase.from("threads").update({ last_message_at: now }).eq("id", threadId);
+
+  // Send email notification to seller for new threads (non-blocking)
+  if (!existingThread) {
+    const [recipientResult, senderResult, listingResult] = await Promise.all([
+      supabase.from("user_profiles").select("display_name, email_messages").eq("user_id", listing.owner_id).maybeSingle(),
+      supabase.from("user_profiles").select("display_name").eq("user_id", user.id).maybeSingle(),
+      supabase.from("listings").select("title").eq("id", listingId).maybeSingle(),
+    ]);
+
+    const recipientProfile = recipientResult.data;
+    const senderProfile = senderResult.data;
+    const listingData = listingResult.data;
+
+    if (recipientProfile?.email_messages !== false) {
+      const { data: recipientEmail } = await supabase.rpc("get_user_email", { p_user_id: listing.owner_id });
+
+      if (recipientEmail) {
+        sendNewMessageEmail({
+          toEmail: recipientEmail,
+          toName: recipientProfile?.display_name || recipientEmail.split("@")[0],
+          senderName: senderProfile?.display_name || user.email?.split("@")[0] || "Someone",
+          listingTitle: listingData?.title || "a listing",
+          messagePreview: messageBody,
+          threadId,
+        }).catch((err) => {
+          console.error("Failed to send new thread email notification:", err);
+        });
+      }
+    }
+  }
 
   return NextResponse.json({ threadId }, { status: existingThread ? 200 : 201 });
 }
