@@ -25,7 +25,7 @@ export async function generateMetadata({
 
   const { data: listing } = await supabase
     .from("listings")
-    .select("title, price_eur, location, category, make, model, year, image_urls, description")
+    .select("title, price_eur, location, category, make, model, year, mileage_km, transmission, image_urls, description")
     .eq("id", id)
     .maybeSingle();
 
@@ -36,48 +36,49 @@ export async function generateMetadata({
     };
   }
 
-  // Build a descriptive title
+  // Build SEO title
   let title = listing.title;
-  if (listing.location) {
-    title += ` in ${listing.location}`;
+  if (listing.category === "car" && listing.make && listing.model) {
+    title = `${listing.year ? listing.year + " " : ""}${listing.make} ${listing.model} for sale`;
+    if (listing.location) title += ` in ${listing.location}, Ireland`;
+  } else {
+    if (listing.location) title += ` in ${listing.location}, Ireland`;
   }
   if (listing.price_eur) {
-    title += ` | €${new Intl.NumberFormat("en-IE").format(listing.price_eur)}`;
+    title += ` — €${new Intl.NumberFormat("en-IE").format(listing.price_eur)}`;
   }
 
-  // Build description
-  let description = "";
+  // Build meta description
+  const descParts: string[] = [];
   if (listing.category === "car" && listing.make) {
-    description = `${listing.year || ""} ${listing.make} ${listing.model || ""} for sale`.trim();
-    if (listing.location) description += ` in ${listing.location}`;
-    description += ". ";
+    const carLine = [listing.year, listing.make, listing.model].filter(Boolean).join(" ");
+    descParts.push(`${carLine} for sale in ${listing.location || "Ireland"}.`);
+    if (listing.mileage_km) descParts.push(`${new Intl.NumberFormat("en-IE").format(listing.mileage_km)}km.`);
+    if (listing.transmission) descParts.push(`${listing.transmission}.`);
   }
-  description += listing.description?.slice(0, 150) || "View details and contact the seller.";
+  const userDesc = listing.description?.slice(0, 130);
+  if (userDesc) descParts.push(userDesc);
+  if (!descParts.length) descParts.push("View this listing on PassionDriven — Ireland's enthusiast car marketplace.");
+  const description = descParts.join(" ").trim();
 
   const imageUrl = listing.image_urls?.[0];
+  const canonicalUrl = `${siteUrl}/listings/${id}`;
 
   return {
     title,
     description,
+    alternates: { canonical: canonicalUrl },
     openGraph: {
-      title: listing.title,
+      title,
       description,
-      url: `${siteUrl}/listings/${id}`,
+      url: canonicalUrl,
       type: "website",
-      images: imageUrl
-        ? [
-            {
-              url: imageUrl,
-              width: 1200,
-              height: 630,
-              alt: listing.title,
-            },
-          ]
-        : undefined,
+      siteName: "PassionDriven",
+      images: imageUrl ? [{ url: imageUrl, width: 1200, height: 630, alt: listing.title }] : undefined,
     },
     twitter: {
       card: imageUrl ? "summary_large_image" : "summary",
-      title: listing.title,
+      title,
       description,
       images: imageUrl ? [imageUrl] : undefined,
     },
@@ -199,8 +200,41 @@ export default async function ListingDetailPage({
   const isPending = listing?.status === "pending";
   const isRejected = listing?.status === "rejected";
 
+  // JSON-LD structured data for Google rich results
+  const jsonLd = listing ? {
+    "@context": "https://schema.org",
+    "@type": listing.category === "car" ? "Car" : "Product",
+    "name": listing.title,
+    "description": listing.description ?? undefined,
+    "image": listing.image_urls?.[0] ?? undefined,
+    "url": `${siteUrl}/listings/${listing.id}`,
+    ...(listing.category === "car" && {
+      "brand": listing.make ? { "@type": "Brand", "name": listing.make } : undefined,
+      "model": listing.model ?? undefined,
+      "vehicleModelDate": listing.year ? String(listing.year) : undefined,
+      "mileageFromOdometer": listing.mileage_km ? { "@type": "QuantitativeValue", "value": listing.mileage_km, "unitCode": "KMT" } : undefined,
+      "vehicleTransmission": listing.transmission ?? undefined,
+      "itemCondition": "https://schema.org/UsedCondition",
+      "vehicleLocation": listing.location ? { "@type": "Place", "name": `${listing.location}, Ireland` } : undefined,
+    }),
+    "offers": {
+      "@type": "Offer",
+      "priceCurrency": "EUR",
+      "price": listing.price_eur ?? undefined,
+      "availability": listing.status === "sold" ? "https://schema.org/SoldOut" : "https://schema.org/InStock",
+      "url": `${siteUrl}/listings/${listing.id}`,
+      "seller": { "@type": "Organization", "name": "PassionDriven" },
+    },
+  } : null;
+
   return (
     <main className="container">
+      {jsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      )}
       <Link className="pill" href="/browse">
         ← Back to Browse
       </Link>
