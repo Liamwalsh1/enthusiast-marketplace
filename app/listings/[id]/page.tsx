@@ -8,6 +8,7 @@ import SaveListingButton from "@/app/components/SaveListingButton";
 import ShareButton from "@/app/components/ShareButton";
 import SellerReviewsSection from "@/app/components/SellerReviewsSection";
 import TrackRecentlyViewed from "@/app/components/TrackRecentlyViewed";
+import ReportListingButton from "@/app/components/ReportListingButton";
 import { createServerSupabaseClient } from "@/app/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -730,6 +731,9 @@ export default async function ListingDetailPage({
                 Browse listings
               </Link>
             </div>
+            {!isOwner && user && (
+              <ReportListingButton listingId={listing.id} />
+            )}
           </aside>
         </div>
       )}
