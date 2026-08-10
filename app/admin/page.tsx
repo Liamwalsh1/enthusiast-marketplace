@@ -32,12 +32,14 @@ export default async function AdminDashboardPage() {
     { count: rejectedCount },
     { count: flaggedCount },
     { count: userCount },
+    { count: waitlistCount },
   ] = await Promise.all([
     supabase.from("listings").select("id", { count: "exact", head: true }).eq("status", "pending"),
     supabase.from("listings").select("id", { count: "exact", head: true }).eq("status", "active"),
     supabase.from("listings").select("id", { count: "exact", head: true }).eq("status", "rejected"),
     supabase.from("comment_flags").select("id", { count: "exact", head: true }).eq("status", "pending"),
     supabase.from("user_profiles").select("id", { count: "exact", head: true }),
+    supabase.from("waitlist").select("id", { count: "exact", head: true }),
   ]);
 
   return (
@@ -46,7 +48,7 @@ export default async function AdminDashboardPage() {
         Admin Dashboard
       </h1>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 24 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 16, marginBottom: 24 }}>
         <StatCard
           label="Pending Listings"
           value={pendingCount ?? 0}
@@ -59,6 +61,7 @@ export default async function AdminDashboardPage() {
           highlight={(flaggedCount ?? 0) > 0 ? "error" : undefined}
         />
         <StatCard label="Total Users" value={userCount ?? 0} />
+        <StatCard label="Waitlist Signups" value={waitlistCount ?? 0} />
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 16 }}>
@@ -82,6 +85,13 @@ export default async function AdminDashboardPage() {
           description="View users, assign roles, and manage accounts"
           links={[
             { label: `All Users (${userCount})`, href: "/admin/users" },
+          ]}
+        />
+        <DashboardSection
+          title="Waitlist"
+          description="People who signed up to be notified about new listings"
+          links={[
+            { label: `View Waitlist (${waitlistCount ?? 0})`, href: "/admin/waitlist" },
           ]}
         />
         <DashboardSection

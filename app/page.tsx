@@ -2,6 +2,7 @@ import Link from "next/link";
 import SearchBox from "./components/SearchBox";
 import EditorsChoiceCard from "./components/EditorsChoiceCard";
 import ExploreSection from "./components/ExploreSection";
+import WaitlistSection from "./components/WaitlistSection";
 import { createServerSupabaseClient } from "@/app/lib/supabase/server";
 
 export default async function Home() {
@@ -83,6 +84,8 @@ export default async function Home() {
         <h2 style={styles.sectionTitle} className="section-title">Explore</h2>
         <ExploreSection isLoggedIn={isLoggedIn} />
       </section>
+
+      <WaitlistSection />
 
       <section>
         <h2 style={styles.sectionTitle} className="section-title">Browse by Category</h2>
