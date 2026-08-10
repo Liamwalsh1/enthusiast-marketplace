@@ -6,12 +6,14 @@ export default function EarlyAccessBanner() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const dismissed = localStorage.getItem("early-access-banner-dismissed");
+    const dismissed = document.cookie.split(";").some((c) => c.trim().startsWith("eab_dismissed="));
     if (!dismissed) setVisible(true);
   }, []);
 
   function dismiss() {
-    localStorage.setItem("early-access-banner-dismissed", "1");
+    const expires = new Date();
+    expires.setDate(expires.getDate() + 30);
+    document.cookie = `eab_dismissed=1; expires=${expires.toUTCString()}; path=/`;
     setVisible(false);
   }
 
