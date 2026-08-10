@@ -47,6 +47,9 @@ export const metadata: Metadata = {
     description:
       "Ireland's marketplace for classic cars, vintage parts, and automotive memorabilia.",
   },
+  verification: {
+    google: "442SwS5fq2x3m_mnSj-l36zuvAYM-cdNLlPYmXLz2Zg",
+  },
   robots: {
     index: true,
     follow: true,
