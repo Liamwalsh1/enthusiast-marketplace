@@ -5,6 +5,7 @@ import SiteHeader from "./SiteHeader";
 import SiteFooter from "./SiteFooter";
 import ToastProvider from "./components/ToastProvider";
 import CookieBanner from "./components/CookieBanner";
+import EarlyAccessBanner from "./components/EarlyAccessBanner";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://passiondriven.ie";
 
@@ -66,6 +67,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <ToastProvider>
+          <EarlyAccessBanner />
           <SiteHeader />
           {children}
           <SiteFooter />
