@@ -66,6 +66,7 @@ export default function AdminCreateListingPage() {
   const [vin, setVin] = useState("");
   const [isModified, setIsModified] = useState<boolean | null>(null);
   const [modifications, setModifications] = useState<string[]>([""]);
+  const [generation, setGeneration] = useState("");
   const [previousOwners, setPreviousOwners] = useState("");
   const [story, setStory] = useState("");
   const [knownIssues, setKnownIssues] = useState("");
@@ -185,6 +186,7 @@ export default function AdminCreateListingPage() {
       insertPayload.year = Number.isFinite(yearInt) ? yearInt : null;
       insertPayload.transmission = transmission || null;
       insertPayload.mileage_km = Number.isFinite(mileageInt) ? mileageInt : null;
+      insertPayload.generation = generation.trim() || null;
       insertPayload.vin = vin.trim() || null;
       insertPayload.is_modified = isModified ?? false;
       const filteredMods = modifications.filter((m) => m.trim() !== "");
@@ -358,6 +360,9 @@ export default function AdminCreateListingPage() {
                     <input className="input" value={mileageKm} onChange={(e) => setMileageKm(e.target.value)} inputMode="numeric" placeholder="e.g. 85000" />
                   </div>
                 </div>
+
+                <label style={styles.label}>Generation (optional)</label>
+                <input className="input" value={generation} onChange={(e) => setGeneration(e.target.value)} placeholder="e.g. E60, F10, Mk4, NA, FD" />
 
                 <label style={styles.label}>Transmission</label>
                 <select className="select" value={transmission} onChange={(e) => setTransmission(e.target.value)}>

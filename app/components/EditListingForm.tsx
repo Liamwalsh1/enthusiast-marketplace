@@ -33,6 +33,7 @@ type Props = {
   initialTransmission: string;
   initialMileageKm: number | null;
   initialVin: string;
+  initialGeneration: string;
   initialIsModified: boolean | null;
   initialModifications: string[];
   initialImageUrls: string[];
@@ -70,6 +71,7 @@ export default function EditListingForm({
   initialTransmission,
   initialMileageKm,
   initialVin,
+  initialGeneration,
   initialIsModified,
   initialModifications,
   initialImageUrls,
@@ -106,6 +108,7 @@ export default function EditListingForm({
   const [transmission, setTransmission] = useState(initialTransmission);
   const [mileageKm, setMileageKm] = useState(initialMileageKm?.toString() ?? "");
   const [vin, setVin] = useState(initialVin);
+  const [generation, setGeneration] = useState(initialGeneration);
   const [isModified, setIsModified] = useState<boolean | null>(initialIsModified);
   const [modifications, setModifications] = useState<string[]>(
     initialModifications.length > 0 ? initialModifications : [""]
@@ -352,6 +355,7 @@ export default function EditListingForm({
       updatePayload.year = Number.isFinite(yearInt) ? yearInt : null;
       updatePayload.transmission = transmission || null;
       updatePayload.mileage_km = Number.isFinite(mileageInt) ? mileageInt : null;
+      updatePayload.generation = generation.trim() || null;
       updatePayload.vin = vin.trim() || null;
       updatePayload.is_modified = isModified ?? false;
       const filteredMods = modifications.filter((m) => m.trim() !== "");
@@ -492,6 +496,15 @@ export default function EditListingForm({
               </select>
             </div>
           </div>
+
+          <label style={labelStyle}>Generation (optional)</label>
+          <input
+            className="input"
+            value={generation}
+            onChange={(e) => setGeneration(e.target.value)}
+            placeholder="e.g. E60, F10, Mk4, NA, FD"
+            disabled={loading}
+          />
 
           <div className="form-two-col">
             <div>

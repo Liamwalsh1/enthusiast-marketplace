@@ -104,6 +104,7 @@ type Listing = {
   // Car-specific fields
   make?: string | null;
   model?: string | null;
+  generation?: string | null;
   year?: number | null;
   transmission?: string | null;
   mileage_km?: number | null;
@@ -167,7 +168,7 @@ async function getListing(
 }> {
   const { data, error } = await supabase
     .from("listings")
-    .select("id,title,category,price_eur,location,condition,description,created_at,image_urls,blur_data_urls,video_url,owner_id,make,model,year,transmission,mileage_km,vin,is_modified,modifications,rejection_reason,status,wheel_diameter,wheel_width,bolt_pattern,wheel_offset,center_bore,wheel_quantity,wheel_brand,wheel_material,wheel_style,boosted_until,featured_until,phone_number,show_phone,contact_name,contact_email,previous_owners,story,known_issues")
+    .select("id,title,category,price_eur,location,condition,description,created_at,image_urls,blur_data_urls,video_url,owner_id,make,model,generation,year,transmission,mileage_km,vin,is_modified,modifications,rejection_reason,status,wheel_diameter,wheel_width,bolt_pattern,wheel_offset,center_bore,wheel_quantity,wheel_brand,wheel_material,wheel_style,boosted_until,featured_until,phone_number,show_phone,contact_name,contact_email,previous_owners,story,known_issues")
     .eq("id", id)
     .maybeSingle();
 
@@ -447,6 +448,12 @@ export default async function ListingDetailPage({
                     <div style={specItemStyle}>
                       <div style={specLabelStyle}>Model</div>
                       <div style={specValueStyle}>{listing.model}</div>
+                    </div>
+                  )}
+                  {listing.generation && (
+                    <div style={specItemStyle}>
+                      <div style={specLabelStyle}>Generation</div>
+                      <div style={specValueStyle}>{listing.generation}</div>
                     </div>
                   )}
                   {listing.year && (

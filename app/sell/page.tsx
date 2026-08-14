@@ -62,6 +62,7 @@ function SellPageContent() {
   const [transmission, setTransmission] = useState("");
   const [mileageKm, setMileageKm] = useState("");
   const [vin, setVin] = useState("");
+  const [generation, setGeneration] = useState("");
   const [isModified, setIsModified] = useState<boolean | null>(null);
   const [modifications, setModifications] = useState<string[]>([""]);
   const [previousOwners, setPreviousOwners] = useState<string>("");
@@ -287,6 +288,7 @@ function SellPageContent() {
       insertPayload.year = Number.isFinite(yearInt) ? yearInt : null;
       insertPayload.transmission = transmission || null;
       insertPayload.mileage_km = Number.isFinite(mileageInt) ? mileageInt : null;
+      insertPayload.generation = generation.trim() || null;
       insertPayload.vin = vin.trim() || null;
       insertPayload.is_modified = isModified ?? false;
       // Filter out empty modifications
@@ -475,6 +477,14 @@ function SellPageContent() {
                     )}
                   </div>
                 </div>
+
+                <label style={styles.label}>Generation (optional)</label>
+                <input
+                  className="input"
+                  value={generation}
+                  onChange={(e) => setGeneration(e.target.value)}
+                  placeholder="e.g. E60, F10, Mk4, NA, FD"
+                />
 
                 <div className="form-two-col">
                   <div>
