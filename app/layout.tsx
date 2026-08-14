@@ -10,9 +10,6 @@ import EarlyAccessBanner from "./components/EarlyAccessBanner";
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://passiondriven.ie";
 
 export const metadata: Metadata = {
-  icons: {
-    icon: "/favicon.png",
-  },
   title: {
     default: "PassionDriven | Enthusiast Cars, Parts & Memorabilia for Sale in Ireland",
     template: "%s | PassionDriven",
