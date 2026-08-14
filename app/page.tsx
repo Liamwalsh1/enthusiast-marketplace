@@ -158,7 +158,7 @@ const styles: Record<string, React.CSSProperties> = {
   trustBar: {
     display: "flex",
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "space-evenly",
     flexWrap: "wrap",
     gap: 0,
     padding: "14px 20px",
@@ -170,7 +170,7 @@ const styles: Record<string, React.CSSProperties> = {
     display: "flex",
     alignItems: "center",
     gap: 8,
-    padding: "6px 20px",
+    padding: "6px 0",
     fontSize: 14,
     fontWeight: 700,
     color: "var(--green-900)",
