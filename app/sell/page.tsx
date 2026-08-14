@@ -483,7 +483,7 @@ function SellPageContent() {
                   className="input"
                   value={generation}
                   onChange={(e) => setGeneration(e.target.value)}
-                  placeholder="e.g. E60, F10, Mk4, NA, FD"
+                  placeholder="e.g. E61, 996, Mk4, FD"
                 />
 
                 <div className="form-two-col">

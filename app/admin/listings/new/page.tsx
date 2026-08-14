@@ -362,7 +362,7 @@ export default function AdminCreateListingPage() {
                 </div>
 
                 <label style={styles.label}>Generation (optional)</label>
-                <input className="input" value={generation} onChange={(e) => setGeneration(e.target.value)} placeholder="e.g. E60, F10, Mk4, NA, FD" />
+                <input className="input" value={generation} onChange={(e) => setGeneration(e.target.value)} placeholder="e.g. E61, 996, Mk4, FD" />
 
                 <label style={styles.label}>Transmission</label>
                 <select className="select" value={transmission} onChange={(e) => setTransmission(e.target.value)}>
