@@ -64,6 +64,9 @@ function SellPageContent() {
   const [vin, setVin] = useState("");
   const [isModified, setIsModified] = useState<boolean | null>(null);
   const [modifications, setModifications] = useState<string[]>([""]);
+  const [previousOwners, setPreviousOwners] = useState<string>("");
+  const [story, setStory] = useState("");
+  const [knownIssues, setKnownIssues] = useState("");
 
   // Wheel-specific fields
   const [wheelDiameter, setWheelDiameter] = useState("");
@@ -289,6 +292,9 @@ function SellPageContent() {
       // Filter out empty modifications
       const filteredMods = modifications.filter((m) => m.trim() !== "");
       insertPayload.modifications = filteredMods.length > 0 ? filteredMods : null;
+      insertPayload.previous_owners = previousOwners.trim() ? parseInt(previousOwners.trim(), 10) : null;
+      insertPayload.story = story.trim() || null;
+      insertPayload.known_issues = knownIssues.trim() || null;
     }
 
     if (category === "wheels") {
@@ -579,6 +585,37 @@ function SellPageContent() {
                   onChange={(e) => setVin(e.target.value)}
                   placeholder="17-character VIN"
                   maxLength={17}
+                />
+
+                <div style={styles.sectionHeader}>Car History</div>
+
+                <label style={styles.label}>Previous Owners (optional)</label>
+                <input
+                  className="input"
+                  type="number"
+                  min={0}
+                  max={99}
+                  value={previousOwners}
+                  onChange={(e) => setPreviousOwners(e.target.value)}
+                  placeholder="e.g. 2"
+                />
+
+                <label style={styles.label}>The Story (optional)</label>
+                <textarea
+                  className="textarea"
+                  value={story}
+                  onChange={(e) => setStory(e.target.value)}
+                  placeholder="Tell buyers about the car's history — where it's been, what it's done, why you're selling..."
+                  rows={4}
+                />
+
+                <label style={styles.label}>Known Issues (optional)</label>
+                <textarea
+                  className="textarea"
+                  value={knownIssues}
+                  onChange={(e) => setKnownIssues(e.target.value)}
+                  placeholder="Be honest — list any faults, wear, or things that need attention..."
+                  rows={3}
                 />
               </>
             )}

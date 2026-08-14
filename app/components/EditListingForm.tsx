@@ -47,6 +47,10 @@ type Props = {
   initialWheelBrand: string;
   initialWheelMaterial: string;
   initialWheelStyle: string;
+  // Car history props
+  initialPreviousOwners: number | null;
+  initialStory: string;
+  initialKnownIssues: string;
 };
 
 export default function EditListingForm({
@@ -79,6 +83,9 @@ export default function EditListingForm({
   initialWheelBrand,
   initialWheelMaterial,
   initialWheelStyle,
+  initialPreviousOwners,
+  initialStory,
+  initialKnownIssues,
 }: Props) {
   const router = useRouter();
   const [title, setTitle] = useState(initialTitle);
@@ -103,6 +110,11 @@ export default function EditListingForm({
   const [modifications, setModifications] = useState<string[]>(
     initialModifications.length > 0 ? initialModifications : [""]
   );
+
+  // Car history fields
+  const [previousOwners, setPreviousOwners] = useState(initialPreviousOwners?.toString() ?? "");
+  const [story, setStory] = useState(initialStory);
+  const [knownIssues, setKnownIssues] = useState(initialKnownIssues);
 
   // Wheel-specific fields
   const [wheelDiameter, setWheelDiameter] = useState(initialWheelDiameter?.toString() ?? "");
@@ -344,6 +356,9 @@ export default function EditListingForm({
       updatePayload.is_modified = isModified ?? false;
       const filteredMods = modifications.filter((m) => m.trim() !== "");
       updatePayload.modifications = filteredMods.length > 0 ? filteredMods : null;
+      updatePayload.previous_owners = previousOwners.trim() ? parseInt(previousOwners.trim(), 10) : null;
+      updatePayload.story = story.trim() || null;
+      updatePayload.known_issues = knownIssues.trim() || null;
     }
 
     // Add wheel-specific fields if category is "wheels"
@@ -595,6 +610,40 @@ export default function EditListingForm({
             onChange={(e) => setVin(e.target.value)}
             placeholder="17-character VIN"
             maxLength={17}
+            disabled={loading}
+          />
+
+          <div style={sectionHeader}>Car History</div>
+
+          <label style={labelStyle}>Previous Owners (optional)</label>
+          <input
+            className="input"
+            type="number"
+            min={0}
+            max={99}
+            value={previousOwners}
+            onChange={(e) => setPreviousOwners(e.target.value)}
+            placeholder="e.g. 2"
+            disabled={loading}
+          />
+
+          <label style={labelStyle}>The Story (optional)</label>
+          <textarea
+            className="textarea"
+            value={story}
+            onChange={(e) => setStory(e.target.value)}
+            placeholder="Tell buyers about the car's history — where it's been, what it's done, why you're selling..."
+            rows={4}
+            disabled={loading}
+          />
+
+          <label style={labelStyle}>Known Issues (optional)</label>
+          <textarea
+            className="textarea"
+            value={knownIssues}
+            onChange={(e) => setKnownIssues(e.target.value)}
+            placeholder="Be honest — list any faults, wear, or things that need attention..."
+            rows={3}
             disabled={loading}
           />
         </>

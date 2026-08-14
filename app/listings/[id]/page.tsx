@@ -128,6 +128,10 @@ type Listing = {
   show_phone?: boolean | null;
   contact_name?: string | null;
   contact_email?: string | null;
+  // Car history fields
+  previous_owners?: number | null;
+  story?: string | null;
+  known_issues?: string | null;
 };
 
 type ListingError = {
@@ -163,7 +167,7 @@ async function getListing(
 }> {
   const { data, error } = await supabase
     .from("listings")
-    .select("id,title,category,price_eur,location,condition,description,created_at,image_urls,blur_data_urls,video_url,owner_id,make,model,year,transmission,mileage_km,vin,is_modified,modifications,rejection_reason,status,wheel_diameter,wheel_width,bolt_pattern,wheel_offset,center_bore,wheel_quantity,wheel_brand,wheel_material,wheel_style,boosted_until,featured_until,phone_number,show_phone,contact_name,contact_email")
+    .select("id,title,category,price_eur,location,condition,description,created_at,image_urls,blur_data_urls,video_url,owner_id,make,model,year,transmission,mileage_km,vin,is_modified,modifications,rejection_reason,status,wheel_diameter,wheel_width,bolt_pattern,wheel_offset,center_bore,wheel_quantity,wheel_brand,wheel_material,wheel_style,boosted_until,featured_until,phone_number,show_phone,contact_name,contact_email,previous_owners,story,known_issues")
     .eq("id", id)
     .maybeSingle();
 
@@ -507,6 +511,32 @@ export default async function ListingDetailPage({
                     <div style={stockBadgeStyle}>
                       Stock / Unmodified
                     </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {listing.category === "car" && (listing.previous_owners != null || listing.story || listing.known_issues) && (
+              <div style={{ marginTop: 16 }}>
+                <div style={{ fontWeight: 950, color: "var(--green-900)", marginBottom: 12 }}>
+                  Car History
+                </div>
+                {listing.previous_owners != null && (
+                  <div style={{ marginBottom: 12 }}>
+                    <div style={specLabelStyle}>Previous Owners</div>
+                    <div style={{ fontWeight: 700, color: "var(--text)", marginTop: 4 }}>{listing.previous_owners}</div>
+                  </div>
+                )}
+                {listing.story && (
+                  <div style={{ marginBottom: 12 }}>
+                    <div style={specLabelStyle}>The Story</div>
+                    <div style={{ fontWeight: 650, color: "var(--text)", marginTop: 4, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{listing.story}</div>
+                  </div>
+                )}
+                {listing.known_issues && (
+                  <div style={{ marginBottom: 4 }}>
+                    <div style={specLabelStyle}>Known Issues</div>
+                    <div style={{ fontWeight: 650, color: "var(--text)", marginTop: 4, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{listing.known_issues}</div>
                   </div>
                 )}
               </div>
