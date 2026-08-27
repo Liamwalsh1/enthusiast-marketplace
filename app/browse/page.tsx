@@ -50,6 +50,7 @@ type Filters = {
   category: Category;
   make: string;
   model: string;
+  generation: string;
   yearMin: string;
   yearMax: string;
   priceMin: string;
@@ -73,6 +74,7 @@ const defaultFilters: Filters = {
   category: "",
   make: "",
   model: "",
+  generation: "",
   yearMin: "",
   yearMax: "",
   priceMin: "",
@@ -336,7 +338,7 @@ function BrowsePageContent() {
       if (filters.search.trim()) {
         const pattern = `%${filters.search.trim()}%`;
         baseQuery = baseQuery.or(
-          `title.ilike.${pattern},make.ilike.${pattern},model.ilike.${pattern},wheel_brand.ilike.${pattern}`
+          `title.ilike.${pattern},make.ilike.${pattern},model.ilike.${pattern},generation.ilike.${pattern},wheel_brand.ilike.${pattern}`
         );
       }
       if (filters.category) {
@@ -347,6 +349,9 @@ function BrowsePageContent() {
       }
       if (filters.model) {
         baseQuery = baseQuery.eq("model", filters.model);
+      }
+      if (filters.generation) {
+        baseQuery = baseQuery.ilike("generation", `%${filters.generation.trim()}%`);
       }
       if (filters.yearMin) {
         const yearMin = parseInt(filters.yearMin, 10);
@@ -586,6 +591,16 @@ function BrowsePageContent() {
                 <span style={styles.pillX}>×</span>
               </button>
             )}
+            {filters.generation && (
+              <button
+                type="button"
+                style={styles.filterPill}
+                onClick={() => updateFilter("generation", "")}
+              >
+                {filters.generation}
+                <span style={styles.pillX}>×</span>
+              </button>
+            )}
             {(filters.yearMin || filters.yearMax) && (
               <button
                 type="button"
@@ -737,6 +752,15 @@ function BrowsePageContent() {
                     </option>
                   ))}
                 </select>
+              </div>
+              <div style={styles.filterGroup}>
+                <label style={styles.filterLabel}>Generation</label>
+                <input
+                  className="input"
+                  placeholder="e.g. E46, 996, Mk4"
+                  value={filters.generation}
+                  onChange={(e) => updateFilter("generation", e.target.value)}
+                />
               </div>
             </div>
 
