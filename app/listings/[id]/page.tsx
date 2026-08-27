@@ -9,6 +9,7 @@ import ShareButton from "@/app/components/ShareButton";
 import SellerReviewsSection from "@/app/components/SellerReviewsSection";
 import TrackRecentlyViewed from "@/app/components/TrackRecentlyViewed";
 import ReportListingButton from "@/app/components/ReportListingButton";
+import ShareListingButton from "@/app/components/ShareListingButton";
 import { createServerSupabaseClient } from "@/app/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -689,6 +690,10 @@ export default async function ListingDetailPage({
                 )}
               </div>
             )}
+            <ShareListingButton
+              title={listing.title}
+              url={`${process.env.NEXT_PUBLIC_SITE_URL || "https://passiondriven.ie"}/listings/${listing.id}`}
+            />
             {!isOwner && (listing.contact_name || listing.contact_email || (listing.show_phone && listing.phone_number)) && (
               <div className="card" style={{ padding: 16, display: "grid", gap: 10 }}>
                 <div style={{ fontWeight: 950, color: "var(--green-900)" }}>Contact Seller</div>
