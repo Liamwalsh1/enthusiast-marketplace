@@ -202,7 +202,11 @@ function SellPageContent() {
     }
 
     const priceInt = parsePrice(priceEur);
-    if (priceEur.trim() !== "" && priceInt === null) {
+    if (!priceEur.trim()) {
+      setErrorMsg("Please enter a price.");
+      return;
+    }
+    if (priceInt === null) {
       setErrorMsg("Price must be a valid number.");
       return;
     }
