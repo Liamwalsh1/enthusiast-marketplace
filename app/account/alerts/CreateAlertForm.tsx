@@ -6,7 +6,7 @@ import { useToast } from "@/app/components/useToast";
 import { IRISH_COUNTIES, CAR_MAKES, CAR_MODELS_BY_MAKE, WHEEL_BRANDS, WHEEL_DIAMETERS, BOLT_PATTERNS } from "@/app/lib/constants";
 import { ensureServerSession } from "@/app/lib/auth/ensureServerSession";
 
-type Category = "car" | "part" | "memorabilia" | "wheels" | "";
+type Category = "car" | "wheels" | "";
 
 export default function CreateAlertForm() {
   const router = useRouter();
@@ -145,8 +145,6 @@ export default function CreateAlertForm() {
             <option value="">All categories</option>
             <option value="car">Car</option>
             <option value="wheels">Wheels</option>
-            <option value="part">Part</option>
-            <option value="memorabilia">Memorabilia</option>
           </select>
         </div>
         <div style={styles.field}>

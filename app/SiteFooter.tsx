@@ -8,7 +8,7 @@ export default function SiteFooter() {
           <div style={styles.left}>
             <div style={styles.brand}>Passion Driven</div>
             <div style={styles.muted}>
-              Ireland&apos;s home for enthusiast cars, parts, and automotive memorabilia.
+              Ireland&apos;s home for enthusiast cars and wheels.
             </div>
           </div>
           <div style={styles.links}>
@@ -16,7 +16,7 @@ export default function SiteFooter() {
               <div style={styles.linkHeading}>Browse</div>
               <Link href="/browse" style={styles.link}>All Listings</Link>
               <Link href="/browse?category=car" style={styles.link}>Cars</Link>
-              <Link href="/browse?category=part" style={styles.link}>Parts</Link>
+              <Link href="/browse?category=wheels" style={styles.link}>Wheels</Link>
             </div>
             <div style={styles.linkGroup}>
               <div style={styles.linkHeading}>Account</div>

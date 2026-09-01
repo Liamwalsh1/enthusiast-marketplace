@@ -12,7 +12,7 @@ type SavedListing = {
   listing: {
     id: string;
     title: string;
-    category: "car" | "part" | "memorabilia" | "wheels";
+    category: "car" | "wheels";
     price_eur: number | null;
     location: string | null;
     condition: string | null;
@@ -33,11 +33,9 @@ function formatPrice(price: number | null) {
   return new Intl.NumberFormat("en-IE").format(price) + " €";
 }
 
-function labelCategory(cat: "car" | "part" | "memorabilia" | "wheels") {
+function labelCategory(cat: "car" | "wheels") {
   if (cat === "car") return "Car";
-  if (cat === "wheels") return "Wheels";
-  if (cat === "part") return "Part";
-  return "Memorabilia";
+  return "Wheels";
 }
 
 export default async function SavedListingsPage() {

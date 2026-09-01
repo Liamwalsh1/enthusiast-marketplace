@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 type Suggestion = {
   id: string;
   title: string;
-  category: "car" | "part" | "memorabilia" | "wheels";
+  category: "car" | "wheels";
   make?: string | null;
   model?: string | null;
   wheel_brand?: string | null;
@@ -57,8 +57,7 @@ function formatPrice(price: number | null) {
 function labelCategory(cat: Suggestion["category"]) {
   if (cat === "car") return "Car";
   if (cat === "wheels") return "Wheels";
-  if (cat === "part") return "Part";
-  return "Memorabilia";
+  return "Wheels";
 }
 
 export default function SearchBox({

@@ -8,8 +8,6 @@ const categories = [
   { key: "all", label: "All Listings", href: "/browse" },
   { key: "car", label: "Cars", href: "/browse?category=car" },
   { key: "wheels", label: "Wheels", href: "/browse?category=wheels" },
-  { key: "part", label: "Parts", href: "/browse?category=part" },
-  { key: "memorabilia", label: "Memorabilia", href: "/browse?category=memorabilia" },
 ];
 
 export default function BrowseDropdown() {

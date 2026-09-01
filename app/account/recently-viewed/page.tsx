@@ -24,9 +24,7 @@ function formatTimeAgo(timestamp: number) {
 
 function labelCategory(cat: string) {
   if (cat === "car") return "Car";
-  if (cat === "wheels") return "Wheels";
-  if (cat === "part") return "Part";
-  return "Memorabilia";
+  return "Wheels";
 }
 
 export default function RecentlyViewedPage() {

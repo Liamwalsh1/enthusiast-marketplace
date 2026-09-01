@@ -18,7 +18,7 @@ import {
 } from "../lib/constants";
 import { optimizeImages, getOptimizedExtension, getOptimizedMimeType } from "../lib/imageUtils";
 
-type Category = "car" | "part" | "memorabilia" | "wheels";
+type Category = "car" | "wheels";
 
 // Wrapper component to handle Suspense for useSearchParams
 export default function SellPage() {
@@ -41,7 +41,7 @@ function SellPageContent() {
 
   // Get initial category from URL param, default to "car"
   const urlCategory = searchParams.get("category") as Category | null;
-  const validCategories: Category[] = ["car", "part", "memorabilia", "wheels"];
+  const validCategories: Category[] = ["car", "wheels"];
   const initialCategory = urlCategory && validCategories.includes(urlCategory) ? urlCategory : "car";
 
   const category = initialCategory;
@@ -394,8 +394,6 @@ function SellPageContent() {
   const categoryLabels: Record<Category, string> = {
     car: "Car",
     wheels: "Wheels",
-    part: "Parts",
-    memorabilia: "Memorabilia",
   };
 
   return (

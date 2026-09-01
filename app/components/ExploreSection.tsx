@@ -6,7 +6,7 @@ import ListingCard from "./ListingCard";
 type Listing = {
   id: string;
   title: string;
-  category: "car" | "part" | "memorabilia" | "wheels";
+  category: "car" | "wheels";
   price_eur: number | null;
   location: string | null;
   condition: string | null;

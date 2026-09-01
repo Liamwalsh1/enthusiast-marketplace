@@ -44,8 +44,7 @@ export default function AdminListingsFilter({ statusFilter, categoryFilter, sear
           >
             <option value="all">All</option>
             <option value="car">Cars</option>
-            <option value="part">Parts</option>
-            <option value="memorabilia">Memorabilia</option>
+            <option value="wheels">Wheels</option>
           </select>
         </div>
 

@@ -25,7 +25,7 @@ export default async function Home() {
   return (
     <main className="container">
       <section style={styles.hero} className="card">
-        <h1 className="hero-title">Ireland's marketplace for enthusiast cars, parts & memorabilia.</h1>
+        <h1 className="hero-title">Ireland's marketplace for enthusiast cars & wheels.</h1>
         <p style={styles.p}>
           Trusted listings for collectors, builders and petrolheads.
         </p>
@@ -110,34 +110,6 @@ export default async function Home() {
             </div>
             <div className="category-label">Wheels</div>
             <div className="category-desc">Rims, tyres & sets</div>
-          </Link>
-          <Link href="/parts" className="card category-card">
-            <div className="category-icon" style={{ background: "none", width: "auto", height: "auto" }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/parts-logo.png"
-                alt="Parts"
-                width={62}
-                height={77}
-                style={{ objectFit: "contain", mixBlendMode: "multiply" }}
-              />
-            </div>
-            <div className="category-label">Parts</div>
-            <div className="category-desc">Engine, body & interior</div>
-          </Link>
-          <Link href="/memorabilia" className="card category-card">
-            <div className="category-icon" style={{ background: "none", width: "auto", height: "auto" }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/memorabilia-logo.png"
-                alt="Memorabilia"
-                width={62}
-                height={77}
-                style={{ objectFit: "contain", mixBlendMode: "multiply" }}
-              />
-            </div>
-            <div className="category-label">Memorabilia</div>
-            <div className="category-desc">Signs, models & collectibles</div>
           </Link>
         </div>
       </section>

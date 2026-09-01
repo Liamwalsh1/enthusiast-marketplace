@@ -90,7 +90,7 @@ export async function generateMetadata({
 type Listing = {
   id: string;
   title: string;
-  category: "car" | "part" | "memorabilia" | "wheels";
+  category: "car" | "wheels";
   price_eur: number | null;
   location: string | null;
   condition: string | null;
@@ -150,8 +150,7 @@ function formatPrice(price: number | null) {
 function labelCategory(cat: Listing["category"]) {
   if (cat === "car") return "Car";
   if (cat === "wheels") return "Wheels";
-  if (cat === "part") return "Part";
-  return "Memorabilia";
+  return "Wheels";
 }
 
 function formatMileage(km: number | null | undefined) {

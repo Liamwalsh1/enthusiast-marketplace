@@ -67,7 +67,7 @@ export async function PATCH(
   }
 
   // Validate category if provided
-  const validCategories = ["car", "part", "memorabilia"];
+  const validCategories = ["car", "wheels"];
   if (body.category && !validCategories.includes(body.category)) {
     return NextResponse.json({ error: "Invalid category" }, { status: 400 });
   }

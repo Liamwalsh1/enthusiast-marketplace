@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 export type SearchAlert = {
   id: string;
   name: string;
-  category: "car" | "part" | "memorabilia" | null;
+  category: "car" | "wheels" | null;
   make: string | null;
   model: string | null;
   year_min: number | null;

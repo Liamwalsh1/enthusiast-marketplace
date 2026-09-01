@@ -15,12 +15,12 @@ import {
 } from "../lib/constants";
 import ListingCard from "../components/ListingCard";
 
-type Category = "car" | "part" | "memorabilia" | "wheels" | "";
+type Category = "car" | "wheels" | "";
 
 type Listing = {
   id: string;
   title: string;
-  category: "car" | "part" | "memorabilia" | "wheels";
+  category: "car" | "wheels";
   price_eur: number | null;
   location: string | null;
   condition: string | null;
@@ -224,7 +224,7 @@ function BrowsePageContent() {
     if (filters.make) parts.push(filters.make);
     if (filters.model) parts.push(filters.model);
     if (filters.category) {
-      const catNames: Record<string, string> = { car: "Cars", wheels: "Wheels", part: "Parts", memorabilia: "Memorabilia" };
+      const catNames: Record<string, string> = { car: "Cars", wheels: "Wheels" };
       parts.push(catNames[filters.category] || filters.category);
     }
     if (filters.location) parts.push(`in ${filters.location}`);
@@ -557,7 +557,7 @@ function BrowsePageContent() {
                 style={styles.filterPill}
                 onClick={() => updateFilter("category", "")}
               >
-                {filters.category === "car" ? "Cars" : filters.category === "wheels" ? "Wheels" : filters.category === "part" ? "Parts" : "Memorabilia"}
+                {filters.category === "car" ? "Cars" : "Wheels"}
                 <span style={styles.pillX}>×</span>
               </button>
             )}
@@ -699,8 +699,6 @@ function BrowsePageContent() {
                   <option value="">All categories</option>
                   <option value="car">Car</option>
                   <option value="wheels">Wheels</option>
-                  <option value="part">Part</option>
-                  <option value="memorabilia">Memorabilia</option>
                 </select>
               </div>
               <div style={styles.filterGroup}>

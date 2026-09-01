@@ -70,7 +70,7 @@ export async function POST(request: Request) {
   }
 
   // Validate category if provided
-  const validCategories = ["car", "part", "memorabilia", "wheels"];
+  const validCategories = ["car", "wheels"];
   if (body.category && !validCategories.includes(body.category)) {
     return NextResponse.json({ error: "Invalid category" }, { status: 400 });
   }

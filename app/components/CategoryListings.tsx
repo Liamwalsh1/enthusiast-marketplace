@@ -13,7 +13,7 @@ import {
 } from "@/app/lib/constants";
 import ListingCard from "./ListingCard";
 
-type CategoryType = "car" | "part" | "memorabilia" | "wheels";
+type CategoryType = "car" | "wheels";
 
 type Listing = {
   id: string;

@@ -7,8 +7,6 @@ import type { CSSProperties } from "react";
 const categories = [
   { key: "car", label: "Car", href: "/sell?category=car" },
   { key: "wheels", label: "Wheels", href: "/sell?category=wheels" },
-  { key: "part", label: "Parts", href: "/sell?category=part" },
-  { key: "memorabilia", label: "Memorabilia", href: "/sell?category=memorabilia" },
 ];
 
 export default function SellDropdown() {

@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Browse Classic Cars & Parts for Sale",
+  title: "Browse Enthusiast Cars & Wheels for Sale",
   description:
-    "Explore classic cars, vintage wheels, parts, and automotive memorabilia for sale in Ireland. Filter by make, model, year, price, and location.",
+    "Explore enthusiast cars and wheels for sale in Ireland. Filter by make, model, year, price, and location.",
   openGraph: {
-    title: "Browse Classic Cars & Parts for Sale",
+    title: "Browse Enthusiast Cars & Wheels for Sale",
     description:
-      "Explore classic cars, vintage wheels, parts, and automotive memorabilia for sale in Ireland.",
+      "Explore enthusiast cars and wheels for sale in Ireland.",
   },
 };
 

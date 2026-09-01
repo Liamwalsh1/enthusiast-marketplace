@@ -18,7 +18,7 @@ import {
 } from "@/app/lib/constants";
 import { optimizeImages, getOptimizedExtension, getOptimizedMimeType } from "@/app/lib/imageUtils";
 
-type Category = "car" | "part" | "memorabilia" | "wheels";
+type Category = "car" | "wheels";
 
 export default function AdminCreateListingPage() {
   const router = useRouter();
@@ -280,7 +280,7 @@ export default function AdminCreateListingPage() {
             {/* Category */}
             <label style={styles.label}>Category</label>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 4 }}>
-              {(["car", "part", "memorabilia", "wheels"] as Category[]).map((cat) => (
+              {(["car", "wheels"] as Category[]).map((cat) => (
                 <button
                   key={cat}
                   type="button"

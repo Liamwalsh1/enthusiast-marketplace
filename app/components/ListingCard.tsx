@@ -5,7 +5,7 @@ import Image from "next/image";
 import { type CSSProperties } from "react";
 import SaveListingButton from "./SaveListingButton";
 
-type CategoryType = "car" | "part" | "memorabilia" | "wheels";
+type CategoryType = "car" | "wheels";
 
 type Listing = {
   id: string;
