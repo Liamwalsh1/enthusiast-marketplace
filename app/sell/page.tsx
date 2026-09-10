@@ -17,6 +17,7 @@ import {
   WHEEL_QUANTITIES,
 } from "../lib/constants";
 import { optimizeImages, getOptimizedExtension, getOptimizedMimeType } from "../lib/imageUtils";
+import CarPhotoSlots from "../components/CarPhotoSlots";
 
 type Category = "car" | "wheels";
 
@@ -836,20 +837,26 @@ function SellPageContent() {
               </label>
             )}
 
-            <label style={styles.label}>Photos (up to 20)</label>
-            <div style={{ color: "var(--muted)", fontWeight: 650, fontSize: 13, marginTop: 4, marginBottom: 6 }}>
-              Good lighting and multiple angles get more enquiries. Include the exterior, interior, engine bay, and any flaws.
+            <label style={styles.label}>Photos</label>
+            <div style={{ color: "var(--muted)", fontWeight: 650, fontSize: 13, marginTop: 4, marginBottom: 12 }}>
+              Good lighting and multiple angles get more enquiries. Include the interior, engine bay, and any flaws.
             </div>
-            <input
-              className="input"
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
-            />
 
-            {files.length > 0 && (
-              <div style={styles.smallText}>{files.length} photo(s) selected</div>
+            {category === "car" ? (
+              <CarPhotoSlots onChange={setFiles} />
+            ) : (
+              <>
+                <input
+                  className="input"
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
+                />
+                {files.length > 0 && (
+                  <div style={styles.smallText}>{files.length} photo(s) selected</div>
+                )}
+              </>
             )}
 
             <label style={styles.label}>Video (optional, max 100MB)</label>
