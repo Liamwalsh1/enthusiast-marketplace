@@ -162,14 +162,19 @@ export async function optimizeImage(
   };
 }
 
-/**
- * Optimize multiple images in parallel
- */
 export async function optimizeImages(
   files: File[],
-  options: ImageOptimizeOptions = {}
+  options: ImageOptimizeOptions = {},
+  concurrency = 3
 ): Promise<OptimizedImage[]> {
-  return Promise.all(files.map((file) => optimizeImage(file, options)));
+  const results: OptimizedImage[] = [];
+  for (let i = 0; i < files.length; i += concurrency) {
+    const batch = await Promise.all(
+      files.slice(i, i + concurrency).map((file) => optimizeImage(file, options))
+    );
+    results.push(...batch);
+  }
+  return results;
 }
 
 /**
