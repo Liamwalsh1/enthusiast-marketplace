@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/app/lib/supabase/server";
 
+const DEDUP_WINDOW_MS = 24 * 60 * 60 * 1000; // 24 hours
+
 export async function POST(request: Request) {
   try {
     const { listingId } = await request.json();
@@ -14,7 +16,21 @@ export async function POST(request: Request) {
       data: { user },
     } = await supabase.auth.getUser();
 
-    // Record the view
+    // For authenticated users, skip if they've already viewed this listing in the last 24h
+    if (user) {
+      const since = new Date(Date.now() - DEDUP_WINDOW_MS).toISOString();
+      const { data: existing } = await supabase
+        .from("listing_views")
+        .select("id")
+        .eq("listing_id", listingId)
+        .eq("viewer_id", user.id)
+        .gte("viewed_at", since)
+        .limit(1)
+        .maybeSingle();
+
+      if (existing) return NextResponse.json({ ok: true });
+    }
+
     const { error } = await supabase.from("listing_views").insert({
       listing_id: listingId,
       viewer_id: user?.id ?? null,
@@ -23,8 +39,6 @@ export async function POST(request: Request) {
 
     if (error) {
       console.error("Failed to record view:", error.message);
-      // Don't return error to client - view tracking shouldn't break the page
-      return NextResponse.json({ ok: true });
     }
 
     return NextResponse.json({ ok: true });
