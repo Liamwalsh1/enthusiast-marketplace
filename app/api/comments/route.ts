@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/app/lib/supabase/server";
+import { rateLimit, getIp } from "@/app/lib/rateLimit";
 
 type CommentPayload = {
   listingId?: string;
@@ -8,6 +9,10 @@ type CommentPayload = {
 };
 
 export async function POST(request: Request) {
+  if (!rateLimit(`comments:${getIp(request)}`, 10, 60 * 1000)) {
+    return NextResponse.json({ error: "Too many requests. Please slow down." }, { status: 429 });
+  }
+
   const supabase = await createServerSupabaseClient();
   const {
     data: { user },

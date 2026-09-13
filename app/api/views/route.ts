@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/app/lib/supabase/server";
+import { rateLimit, getIp } from "@/app/lib/rateLimit";
 
 const DEDUP_WINDOW_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 export async function POST(request: Request) {
   try {
+    if (!rateLimit(`views:${getIp(request)}`, 60, 60 * 1000)) {
+      return NextResponse.json({ ok: true }); // silent — don't surface rate limit errors to users
+    }
+
     const { listingId } = await request.json();
 
     if (!listingId || typeof listingId !== "string") {

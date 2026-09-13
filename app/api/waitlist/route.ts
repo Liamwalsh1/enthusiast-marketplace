@@ -1,11 +1,15 @@
 import { NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/app/lib/supabase/server";
 import { Resend } from "resend";
+import { rateLimit, getIp } from "@/app/lib/rateLimit";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://passiondriven.ie";
 const FROM_EMAIL = process.env.FROM_EMAIL || "PassionDriven <notifications@passiondriven.ie>";
 
 export async function POST(request: Request) {
+  if (!rateLimit(`waitlist:${getIp(request)}`, 5, 60 * 60 * 1000)) {
+    return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
+  }
   let payload: { email?: string; name?: string };
   try {
     payload = await request.json();

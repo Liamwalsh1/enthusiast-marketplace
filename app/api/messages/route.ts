@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/app/lib/supabase/server";
 import { sendNewMessageEmail } from "@/app/lib/email";
+import { rateLimit, getIp } from "@/app/lib/rateLimit";
 
 type MessagePayload = {
   threadId?: string;
@@ -9,6 +10,9 @@ type MessagePayload = {
 };
 
 export async function POST(request: Request) {
+  if (!rateLimit(`messages:${getIp(request)}`, 20, 60 * 1000)) {
+    return NextResponse.json({ error: "Too many requests. Please slow down." }, { status: 429 });
+  }
   const supabase = await createServerSupabaseClient();
   const {
     data: { user },
