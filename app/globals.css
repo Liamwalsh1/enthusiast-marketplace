@@ -369,6 +369,14 @@ button, input, select, textarea {
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.1);
 }
 
+.listing-img-wrap img {
+  transition: transform 0.4s ease;
+}
+
+.card:has(> a[href^="/listings/"]):hover .listing-img-wrap img {
+  transform: scale(1.06);
+}
+
 /* Sticky filter section on browse page */
 .browse-filters {
   position: sticky;

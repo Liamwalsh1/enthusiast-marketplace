@@ -56,7 +56,7 @@ export default function ListingCard({ listing, isLoggedIn, showCategory: _showCa
     <div className="card" style={{ ...styles.listingCard, opacity: isSold ? 0.75 : 1 }}>
       <Link href={`/listings/${listing.id}`} style={styles.cardLink}>
         {imageUrl ? (
-          <div style={styles.imageWrap}>
+          <div className="listing-img-wrap" style={styles.imageWrap}>
             <Image
               src={imageUrl}
               alt={listing.title}
