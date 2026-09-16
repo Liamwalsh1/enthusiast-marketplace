@@ -4,6 +4,7 @@ import EditorsChoiceCard from "./components/EditorsChoiceCard";
 import ExploreSection from "./components/ExploreSection";
 import WaitlistSection from "./components/WaitlistSection";
 import FadeIn from "./components/FadeIn";
+import ParallaxHero from "./components/ParallaxHero";
 import { createServerSupabaseClient } from "@/app/lib/supabase/server";
 
 export default async function Home() {
@@ -25,19 +26,21 @@ export default async function Home() {
 
   return (
     <main className="container">
-      <section style={styles.hero} className="card">
-        <h1 className="hero-title">Ireland's marketplace for enthusiast cars & wheels.</h1>
-        <p style={styles.p}>
-          Trusted listings for collectors, builders and petrolheads.
-        </p>
-
-        <div style={styles.actions}>
-          <Link className="btn btn-primary" href="/browse">Browse listings</Link>
-          <Link className="btn btn-secondary" href="/sell">Post an ad</Link>
-        </div>
-
-        <SearchBox variant="home" />
-      </section>
+      <div style={{ overflow: "hidden", borderRadius: "var(--radius)" }}>
+        <ParallaxHero>
+          <section style={styles.hero} className="card">
+            <h1 className="hero-title">Ireland's marketplace for enthusiast cars & wheels.</h1>
+            <p style={styles.p}>
+              Trusted listings for collectors, builders and petrolheads.
+            </p>
+            <div style={styles.actions}>
+              <Link className="btn btn-primary" href="/browse">Browse listings</Link>
+              <Link className="btn btn-secondary" href="/sell">Post an ad</Link>
+            </div>
+            <SearchBox variant="home" />
+          </section>
+        </ParallaxHero>
+      </div>
 
       {/* Trust signals */}
       <FadeIn delay={100}>
