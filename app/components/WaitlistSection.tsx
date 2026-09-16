@@ -69,7 +69,7 @@ export default function WaitlistSection() {
             Get notified when new listings go up
           </h2>
           <p style={{ margin: "0 0 20px", color: "rgba(255,255,255,0.75)", fontWeight: 650, fontSize: 15 }}>
-            Be the first to see new enthusiast cars, parts and memorabilia listed in Ireland.
+            Be the first to see new enthusiast cars and wheels listed in Ireland.
           </p>
 
           <form onSubmit={onSubmit}>
