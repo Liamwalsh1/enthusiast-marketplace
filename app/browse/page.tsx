@@ -334,12 +334,8 @@ function BrowsePageContent() {
           break;
       }
 
-      // Apply filters - search across multiple fields
       if (filters.search.trim()) {
-        const pattern = `%${filters.search.trim()}%`;
-        baseQuery = baseQuery.or(
-          `title.ilike.${pattern},make.ilike.${pattern},model.ilike.${pattern},generation.ilike.${pattern},wheel_brand.ilike.${pattern}`
-        );
+        baseQuery = baseQuery.ilike("search_text", `%${filters.search.trim()}%`);
       }
       if (filters.category) {
         baseQuery = baseQuery.eq("category", filters.category);
