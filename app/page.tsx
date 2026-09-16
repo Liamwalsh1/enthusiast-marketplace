@@ -3,6 +3,7 @@ import SearchBox from "./components/SearchBox";
 import EditorsChoiceCard from "./components/EditorsChoiceCard";
 import ExploreSection from "./components/ExploreSection";
 import WaitlistSection from "./components/WaitlistSection";
+import FadeIn from "./components/FadeIn";
 import { createServerSupabaseClient } from "@/app/lib/supabase/server";
 
 export default async function Home() {
@@ -39,6 +40,7 @@ export default async function Home() {
       </section>
 
       {/* Trust signals */}
+      <FadeIn delay={100}>
       <section style={styles.trustBar} className="trust-bar">
         <div style={styles.trustItem} className="trust-bar-item">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={styles.trustIcon}>
@@ -64,22 +66,29 @@ export default async function Home() {
           <span>Secure messaging</span>
         </div>
       </section>
+      </FadeIn>
 
       {editorsChoice && (
-        <section>
-          <h2 style={styles.sectionTitle} className="section-title">Editor&apos;s Choice</h2>
-          <EditorsChoiceCard listing={editorsChoice} />
-        </section>
+        <FadeIn delay={80}>
+          <section>
+            <h2 style={styles.sectionTitle} className="section-title">Editor&apos;s Choice</h2>
+            <EditorsChoiceCard listing={editorsChoice} />
+          </section>
+        </FadeIn>
       )}
 
+      <FadeIn delay={80}>
+        <section>
+          <h2 style={styles.sectionTitle} className="section-title">Explore</h2>
+          <ExploreSection isLoggedIn={isLoggedIn} />
+        </section>
+      </FadeIn>
 
-      <section>
-        <h2 style={styles.sectionTitle} className="section-title">Explore</h2>
-        <ExploreSection isLoggedIn={isLoggedIn} />
-      </section>
+      <FadeIn delay={80}>
+        <WaitlistSection />
+      </FadeIn>
 
-      <WaitlistSection />
-
+      <FadeIn delay={80}>
       <section>
         <h2 style={styles.sectionTitle} className="section-title">Browse by Category</h2>
         <div className="category-grid">
@@ -113,6 +122,7 @@ export default async function Home() {
           </Link>
         </div>
       </section>
+      </FadeIn>
     </main>
   );
 }
