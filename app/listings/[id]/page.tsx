@@ -125,6 +125,7 @@ type Listing = {
   // Promotion fields
   boosted_until?: string | null;
   featured_until?: string | null;
+  pd_written?: boolean | null;
   // Contact fields
   phone_number?: string | null;
   show_phone?: boolean | null;
@@ -168,7 +169,7 @@ async function getListing(
 }> {
   const { data, error } = await supabase
     .from("listings")
-    .select("id,title,category,price_eur,location,condition,description,created_at,image_urls,blur_data_urls,video_url,owner_id,make,model,generation,year,transmission,mileage_km,vin,is_modified,modifications,rejection_reason,status,wheel_diameter,wheel_width,bolt_pattern,wheel_offset,center_bore,wheel_quantity,wheel_brand,wheel_material,wheel_style,boosted_until,featured_until,phone_number,show_phone,contact_name,contact_email,previous_owners,story,known_issues")
+    .select("id,title,category,price_eur,location,condition,description,created_at,image_urls,blur_data_urls,video_url,owner_id,make,model,generation,year,transmission,mileage_km,vin,is_modified,modifications,rejection_reason,status,wheel_diameter,wheel_width,bolt_pattern,wheel_offset,center_bore,wheel_quantity,wheel_brand,wheel_material,wheel_style,boosted_until,featured_until,phone_number,show_phone,contact_name,contact_email,previous_owners,story,known_issues,pd_written")
     .eq("id", id)
     .maybeSingle();
 
@@ -616,14 +617,19 @@ export default async function ListingDetailPage({
             )}
 
             <div style={{ marginTop: 14 }}>
-              <div
-                style={{
-                  fontWeight: 950,
-                  color: "var(--green-900)",
-                  marginBottom: 8,
-                }}
-              >
-                Description
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                <div style={{ fontWeight: 950, color: "var(--green-900)" }}>Description</div>
+                {listing.pd_written && (
+                  <span style={{
+                    fontSize: 11, fontWeight: 800, letterSpacing: 0.5,
+                    textTransform: "uppercase", color: "var(--green-900)",
+                    background: "rgba(20,83,45,0.08)",
+                    border: "1px solid rgba(20,83,45,0.2)",
+                    padding: "2px 8px", borderRadius: 999,
+                  }}>
+                    PassionDriven Written
+                  </span>
+                )}
               </div>
               <div
                 style={{

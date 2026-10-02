@@ -418,3 +418,63 @@ View listing: ${SITE_URL}/listings/${listingId}
     return { success: false, error: err };
   }
 }
+
+export async function sendDescriptionReadyEmail({
+  toEmail,
+  toName,
+  listingTitle,
+  listingId,
+}: {
+  toEmail: string;
+  toName: string;
+  listingTitle: string;
+  listingId: string;
+}) {
+  const resend = getResend();
+  const listingUrl = `${SITE_URL}/listings/${listingId}`;
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f5f5;padding:40px 20px;">
+    <tr><td align="center">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+        <tr><td style="background:#14532d;padding:24px 32px;text-align:center;">
+          <h1 style="margin:0;color:#fff;font-size:24px;font-weight:900;">PassionDriven</h1>
+        </td></tr>
+        <tr><td style="padding:32px;">
+          <h2 style="margin:0 0 8px;color:#14532d;font-size:20px;font-weight:900;">Your listing description is ready</h2>
+          <p style="margin:0 0 20px;color:#555;font-size:15px;line-height:1.6;">
+            Hi ${toName}, the PassionDriven team has written a description for your listing <strong>${listingTitle}</strong>. Your listing is now live.
+          </p>
+          <a href="${listingUrl}" style="display:inline-block;background:#14532d;color:#fff;font-size:15px;font-weight:800;padding:14px 32px;border-radius:10px;text-decoration:none;">View your listing</a>
+        </td></tr>
+        <tr><td style="padding:0 32px 24px;color:#999;font-size:12px;">
+          PassionDriven · Ireland's enthusiast marketplace · <a href="${SITE_URL}" style="color:#14532d;">passiondriven.ie</a>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`.trim();
+
+  try {
+    const { error } = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: toEmail,
+      subject: `Your listing description is ready — ${listingTitle}`,
+      html,
+      text: `Hi ${toName}, the PassionDriven team has written a description for your listing "${listingTitle}". View it here: ${listingUrl}`,
+    });
+    if (error) {
+      console.error("Failed to send description ready email:", error);
+      return { success: false, error };
+    }
+    return { success: true };
+  } catch (err) {
+    console.error("Email send error:", err);
+    return { success: false, error: err };
+  }
+}

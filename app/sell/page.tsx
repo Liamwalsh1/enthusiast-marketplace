@@ -51,6 +51,8 @@ function SellPageContent() {
   const [location, setLocation] = useState("");
   const [condition, setCondition] = useState("Used");
   const [description, setDescription] = useState("");
+  const [descriptionRequested, setDescriptionRequested] = useState(false);
+  const [sellerNotes, setSellerNotes] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const [videoFile, setVideoFile] = useState<File | null>(null);
 
@@ -280,7 +282,9 @@ function SellPageContent() {
       price_eur: priceInt,
       location: location.trim() || null,
       condition: condition.trim() || null,
-      description: description.trim() || null,
+      description: descriptionRequested ? null : (description.trim() || null),
+      description_requested: category === "car" ? descriptionRequested : false,
+      seller_notes: (category === "car" && descriptionRequested) ? (sellerNotes.trim() || null) : null,
       owner_id: user.id,
       status: "pending",
       phone_number: phoneNumber.trim() || null,
@@ -808,12 +812,46 @@ function SellPageContent() {
             )}
 
             <label style={styles.label}>Description</label>
-            <textarea
-              className="textarea"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Spec, history, condition, extras…"
-            />
+
+            {category === "car" && (
+              <label style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 12, cursor: "pointer", padding: "12px 14px", borderRadius: 12, border: `1.5px solid ${descriptionRequested ? "var(--green-700)" : "var(--border)"}`, background: descriptionRequested ? "rgba(20,83,45,0.04)" : "var(--soft)" }}>
+                <input
+                  type="checkbox"
+                  checked={descriptionRequested}
+                  onChange={(e) => setDescriptionRequested(e.target.checked)}
+                  style={{ width: 16, height: 16, marginTop: 2, accentColor: "var(--green-900)", flexShrink: 0, cursor: "pointer" }}
+                />
+                <div>
+                  <div style={{ fontWeight: 800, fontSize: 14, color: "var(--green-900)" }}>
+                    Have the PassionDriven team write my description
+                  </div>
+                  <div style={{ fontWeight: 650, fontSize: 12, color: "var(--muted)", marginTop: 2 }}>
+                    We&apos;ll write a compelling listing description based on your car&apos;s specs. Free during early access.
+                  </div>
+                </div>
+              </label>
+            )}
+
+            {descriptionRequested && category === "car" ? (
+              <>
+                <label style={styles.label}>
+                  Notes for our team <span style={{ fontWeight: 600, opacity: 0.6 }}>(optional)</span>
+                </label>
+                <textarea
+                  className="textarea"
+                  value={sellerNotes}
+                  onChange={(e) => setSellerNotes(e.target.value)}
+                  placeholder="Anything specific to include — recent service, extras, known issues, the story behind the car…"
+                />
+              </>
+            ) : (
+              <textarea
+                className="textarea"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Spec, history, condition, extras…"
+              />
+            )}
 
             <label style={styles.label}>
               Phone Number <span style={{ fontWeight: 600, opacity: 0.6 }}>(optional)</span>

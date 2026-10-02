@@ -33,6 +33,7 @@ export default async function AdminDashboardPage() {
     { count: flaggedCount },
     { count: userCount },
     { count: waitlistCount },
+    { count: descriptionsCount },
   ] = await Promise.all([
     supabase.from("listings").select("id", { count: "exact", head: true }).eq("status", "pending"),
     supabase.from("listings").select("id", { count: "exact", head: true }).eq("status", "active"),
@@ -40,6 +41,7 @@ export default async function AdminDashboardPage() {
     supabase.from("comment_flags").select("id", { count: "exact", head: true }).eq("status", "pending"),
     supabase.from("user_profiles").select("id", { count: "exact", head: true }),
     supabase.from("waitlist").select("id", { count: "exact", head: true }),
+    supabase.from("listings").select("id", { count: "exact", head: true }).eq("description_requested", true).eq("pd_written", false),
   ]);
 
   return (
@@ -48,7 +50,7 @@ export default async function AdminDashboardPage() {
         Admin Dashboard
       </h1>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 16, marginBottom: 24 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 16, marginBottom: 24 }}>
         <StatCard
           label="Pending Listings"
           value={pendingCount ?? 0}
@@ -59,6 +61,11 @@ export default async function AdminDashboardPage() {
           label="Flagged Comments"
           value={flaggedCount ?? 0}
           highlight={(flaggedCount ?? 0) > 0 ? "error" : undefined}
+        />
+        <StatCard
+          label="Descriptions Queue"
+          value={descriptionsCount ?? 0}
+          highlight={(descriptionsCount ?? 0) > 0 ? "warning" : undefined}
         />
         <StatCard label="Total Users" value={userCount ?? 0} />
         <StatCard label="Waitlist Signups" value={waitlistCount ?? 0} />
@@ -92,6 +99,13 @@ export default async function AdminDashboardPage() {
           description="People who signed up to be notified about new listings"
           links={[
             { label: `View Waitlist (${waitlistCount ?? 0})`, href: "/admin/waitlist" },
+          ]}
+        />
+        <DashboardSection
+          title="Write Descriptions"
+          description="Listings where sellers requested a PassionDriven-written description"
+          links={[
+            { label: `Queue (${descriptionsCount ?? 0})`, href: "/admin/descriptions", primary: (descriptionsCount ?? 0) > 0 },
           ]}
         />
         <DashboardSection
