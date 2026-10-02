@@ -71,6 +71,8 @@ function SellPageContent() {
   const [previousOwners, setPreviousOwners] = useState<string>("");
   const [story, setStory] = useState("");
   const [knownIssues, setKnownIssues] = useState("");
+  const [nctExpiry, setNctExpiry] = useState("");
+  const [roadTaxExpiry, setRoadTaxExpiry] = useState("");
 
   // Wheel-specific fields
   const [wheelDiameter, setWheelDiameter] = useState("");
@@ -306,6 +308,8 @@ function SellPageContent() {
       insertPayload.previous_owners = previousOwners.trim() ? parseInt(previousOwners.trim(), 10) : null;
       insertPayload.story = story.trim() || null;
       insertPayload.known_issues = knownIssues.trim() || null;
+      insertPayload.nct_expiry = nctExpiry ? `${nctExpiry}-01` : null;
+      insertPayload.road_tax_expiry = roadTaxExpiry ? `${roadTaxExpiry}-01` : null;
     }
 
     if (category === "wheels") {
@@ -605,6 +609,27 @@ function SellPageContent() {
                 />
 
                 <div style={styles.sectionHeader}>Car History</div>
+
+                <div className="form-two-col">
+                  <div>
+                    <label style={styles.label}>NCT Expiry <span style={{ fontWeight: 600, opacity: 0.6 }}>(optional)</span></label>
+                    <input
+                      className="input"
+                      type="month"
+                      value={nctExpiry}
+                      onChange={(e) => setNctExpiry(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label style={styles.label}>Road Tax Expiry <span style={{ fontWeight: 600, opacity: 0.6 }}>(optional)</span></label>
+                    <input
+                      className="input"
+                      type="month"
+                      value={roadTaxExpiry}
+                      onChange={(e) => setRoadTaxExpiry(e.target.value)}
+                    />
+                  </div>
+                </div>
 
                 <label style={styles.label}>Previous Owners (optional)</label>
                 <input

@@ -135,6 +135,8 @@ type Listing = {
   previous_owners?: number | null;
   story?: string | null;
   known_issues?: string | null;
+  nct_expiry?: string | null;
+  road_tax_expiry?: string | null;
 };
 
 type ListingError = {
@@ -154,6 +156,29 @@ function labelCategory(cat: Listing["category"]) {
   return "Wheels";
 }
 
+function ExpiryBadge({ label, date }: { label: string; date: string }) {
+  const expiry = new Date(date);
+  const now = new Date();
+  const monthsLeft = (expiry.getFullYear() - now.getFullYear()) * 12 + (expiry.getMonth() - now.getMonth());
+  const expired = monthsLeft < 0;
+  const soon = monthsLeft >= 0 && monthsLeft <= 6;
+  const color = expired ? "rgb(185,28,28)" : soon ? "rgb(180,83,9)" : "var(--green-900)";
+  const bg = expired ? "rgba(239,68,68,0.08)" : soon ? "rgba(251,191,36,0.1)" : "var(--soft)";
+  const border = expired ? "rgba(239,68,68,0.25)" : soon ? "rgba(251,191,36,0.35)" : "var(--border)";
+  const formatted = expiry.toLocaleDateString("en-IE", { month: "short", year: "numeric" });
+
+  return (
+    <div style={{ ...specItemStyle, background: bg, border: `1px solid ${border}`, borderRadius: 10, padding: "10px 14px" }}>
+      <div style={{ ...specLabelStyle }}>{label}</div>
+      <div style={{ fontWeight: 800, color, fontSize: 15, marginTop: 4 }}>
+        {formatted}
+        {expired && <span style={{ fontSize: 11, marginLeft: 6, fontWeight: 700 }}>EXPIRED</span>}
+        {soon && !expired && <span style={{ fontSize: 11, marginLeft: 6, fontWeight: 700 }}>DUE SOON</span>}
+      </div>
+    </div>
+  );
+}
+
 function formatMileage(km: number | null | undefined) {
   if (km === null || km === undefined) return null;
   return new Intl.NumberFormat("en-IE").format(km) + " km";
@@ -169,7 +194,7 @@ async function getListing(
 }> {
   const { data, error } = await supabase
     .from("listings")
-    .select("id,title,category,price_eur,location,condition,description,created_at,image_urls,blur_data_urls,video_url,owner_id,make,model,generation,year,transmission,mileage_km,vin,is_modified,modifications,rejection_reason,status,wheel_diameter,wheel_width,bolt_pattern,wheel_offset,center_bore,wheel_quantity,wheel_brand,wheel_material,wheel_style,boosted_until,featured_until,phone_number,show_phone,contact_name,contact_email,previous_owners,story,known_issues,pd_written")
+    .select("id,title,category,price_eur,location,condition,description,created_at,image_urls,blur_data_urls,video_url,owner_id,make,model,generation,year,transmission,mileage_km,vin,is_modified,modifications,rejection_reason,status,wheel_diameter,wheel_width,bolt_pattern,wheel_offset,center_bore,wheel_quantity,wheel_brand,wheel_material,wheel_style,boosted_until,featured_until,phone_number,show_phone,contact_name,contact_email,previous_owners,story,known_issues,pd_written,nct_expiry,road_tax_expiry")
     .eq("id", id)
     .maybeSingle();
 
@@ -521,6 +546,22 @@ export default async function ListingDetailPage({
                     </div>
                   </div>
                 )}
+              </div>
+            )}
+
+            {listing.category === "car" && (listing.nct_expiry || listing.road_tax_expiry) && (
+              <div style={{ marginTop: 16 }}>
+                <div style={{ fontWeight: 950, color: "var(--green-900)", marginBottom: 12 }}>
+                  NCT &amp; Road Tax
+                </div>
+                <div className="spec-grid">
+                  {listing.nct_expiry && (
+                    <ExpiryBadge label="NCT Expiry" date={listing.nct_expiry} />
+                  )}
+                  {listing.road_tax_expiry && (
+                    <ExpiryBadge label="Road Tax" date={listing.road_tax_expiry} />
+                  )}
+                </div>
               </div>
             )}
 
