@@ -23,7 +23,7 @@ export default async function EditListingPage({
 
   const { data: listing, error } = await supabase
     .from("listings")
-    .select("id, owner_id, title, price_eur, description, status, category, location, condition, make, model, generation, year, transmission, mileage_km, vin, is_modified, modifications, image_urls, video_url, wheel_diameter, wheel_width, bolt_pattern, wheel_offset, center_bore, wheel_quantity, wheel_brand, wheel_material, wheel_style, phone_number, show_phone, previous_owners, story, known_issues")
+    .select("id, owner_id, title, price_eur, description, status, category, location, condition, make, model, generation, year, transmission, mileage_km, vin, is_modified, modifications, image_urls, video_url, wheel_diameter, wheel_width, bolt_pattern, wheel_offset, center_bore, wheel_quantity, wheel_brand, wheel_material, wheel_style, phone_number, show_phone, previous_owners, story, known_issues, nct_expiry, road_tax_expiry")
     .eq("id", id)
     .maybeSingle();
 
@@ -88,6 +88,8 @@ export default async function EditListingPage({
           initialPreviousOwners={listing.previous_owners ?? null}
           initialStory={listing.story ?? ""}
           initialKnownIssues={listing.known_issues ?? ""}
+          initialNctExpiry={listing.nct_expiry ?? null}
+          initialRoadTaxExpiry={listing.road_tax_expiry ?? null}
         />
       </section>
     </main>

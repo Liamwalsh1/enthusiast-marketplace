@@ -52,6 +52,8 @@ type Props = {
   initialPreviousOwners: number | null;
   initialStory: string;
   initialKnownIssues: string;
+  initialNctExpiry: string | null;
+  initialRoadTaxExpiry: string | null;
 };
 
 export default function EditListingForm({
@@ -88,6 +90,8 @@ export default function EditListingForm({
   initialPreviousOwners,
   initialStory,
   initialKnownIssues,
+  initialNctExpiry,
+  initialRoadTaxExpiry,
 }: Props) {
   const router = useRouter();
   const [title, setTitle] = useState(initialTitle);
@@ -118,6 +122,8 @@ export default function EditListingForm({
   const [previousOwners, setPreviousOwners] = useState(initialPreviousOwners?.toString() ?? "");
   const [story, setStory] = useState(initialStory);
   const [knownIssues, setKnownIssues] = useState(initialKnownIssues);
+  const [nctExpiry, setNctExpiry] = useState(initialNctExpiry ? initialNctExpiry.slice(0, 7) : "");
+  const [roadTaxExpiry, setRoadTaxExpiry] = useState(initialRoadTaxExpiry ? initialRoadTaxExpiry.slice(0, 7) : "");
 
   // Wheel-specific fields
   const [wheelDiameter, setWheelDiameter] = useState(initialWheelDiameter?.toString() ?? "");
@@ -363,6 +369,8 @@ export default function EditListingForm({
       updatePayload.previous_owners = previousOwners.trim() ? parseInt(previousOwners.trim(), 10) : null;
       updatePayload.story = story.trim() || null;
       updatePayload.known_issues = knownIssues.trim() || null;
+      updatePayload.nct_expiry = nctExpiry ? `${nctExpiry}-01` : null;
+      updatePayload.road_tax_expiry = roadTaxExpiry ? `${roadTaxExpiry}-01` : null;
     }
 
     // Add wheel-specific fields if category is "wheels"
@@ -659,6 +667,29 @@ export default function EditListingForm({
             rows={3}
             disabled={loading}
           />
+
+          <div className="form-two-col">
+            <div>
+              <label style={labelStyle}>NCT Expiry (optional)</label>
+              <input
+                className="input"
+                type="month"
+                value={nctExpiry}
+                onChange={(e) => setNctExpiry(e.target.value)}
+                disabled={loading}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>Road Tax Expiry (optional)</label>
+              <input
+                className="input"
+                type="month"
+                value={roadTaxExpiry}
+                onChange={(e) => setRoadTaxExpiry(e.target.value)}
+                disabled={loading}
+              />
+            </div>
+          </div>
         </>
       )}
 

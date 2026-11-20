@@ -1,6 +1,21 @@
 import "./globals.css";
 import type { Metadata } from "next";
+import { Barlow, Barlow_Condensed } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
+
+const barlow = Barlow({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-barlow",
+  display: "swap",
+});
+
+const barlowCondensed = Barlow_Condensed({
+  subsets: ["latin"],
+  weight: ["600", "700", "800"],
+  variable: "--font-barlow-condensed",
+  display: "swap",
+});
 import SiteHeader from "./SiteHeader";
 import SiteFooter from "./SiteFooter";
 import ToastProvider from "./components/ToastProvider";
@@ -12,11 +27,11 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://passiondriven.ie";
 
 export const metadata: Metadata = {
   title: {
-    default: "PassionDriven | Enthusiast Cars, Parts & Memorabilia for Sale in Ireland",
+    default: "PassionDriven | Enthusiast Cars & Wheels for Sale in Ireland",
     template: "%s | PassionDriven",
   },
   description:
-    "Buy and sell enthusiast cars, modified cars, classic cars, performance parts and memorabilia in Ireland. Ireland's marketplace for petrolheads.",
+    "Buy and sell enthusiast cars and wheels in Ireland. Trusted listings for collectors, builders and petrolheads. Ireland's marketplace for enthusiast cars.",
   keywords: [
     "cars for sale Ireland",
     "enthusiast cars Ireland",
@@ -25,26 +40,26 @@ export const metadata: Metadata = {
     "used sports cars Ireland",
     "JDM cars Ireland",
     "performance cars Ireland",
-    "car parts Ireland",
-    "automotive memorabilia Ireland",
+    "alloy wheels Ireland",
+    "wheels for sale Ireland",
     "used cars Ireland",
     "cars for sale",
   ],
-  authors: [{ name: "Passion Driven" }],
+  authors: [{ name: "PassionDriven" }],
   openGraph: {
     type: "website",
     locale: "en_IE",
     url: siteUrl,
-    siteName: "Passion Driven",
-    title: "Passion Driven | Classic Cars, Parts & Memorabilia",
+    siteName: "PassionDriven",
+    title: "PassionDriven | Enthusiast Cars & Wheels for Sale in Ireland",
     description:
-      "Ireland's marketplace for classic cars, vintage parts, and automotive memorabilia.",
+      "Ireland's marketplace for enthusiast cars and wheels. Trusted listings for collectors, builders and petrolheads.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Passion Driven | Classic Cars, Parts & Memorabilia",
+    title: "PassionDriven | Enthusiast Cars & Wheels for Sale in Ireland",
     description:
-      "Ireland's marketplace for classic cars, vintage parts, and automotive memorabilia.",
+      "Ireland's marketplace for enthusiast cars and wheels. Trusted listings for collectors, builders and petrolheads.",
   },
   verification: {
     google: "442SwS5fq2x3m_mnSj-l36zuvAYM-cdNLlPYmXLz2Zg",
@@ -62,7 +77,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${barlow.variable} ${barlowCondensed.variable}`}>
       <head>
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-29P61D0TGM" />
         <script dangerouslySetInnerHTML={{ __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-29P61D0TGM');` }} />

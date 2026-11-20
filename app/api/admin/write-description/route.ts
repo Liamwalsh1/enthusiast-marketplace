@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
 import { createServerSupabaseClient } from "@/app/lib/supabase/server";
 import { sendDescriptionReadyEmail } from "@/app/lib/email";
 
@@ -39,14 +40,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: updateError.message }, { status: 500 });
   }
 
-  // Fetch seller email & name
-  const { data: profile } = await supabase
-    .from("user_profiles")
-    .select("display_name")
-    .eq("id", listing.owner_id)
-    .maybeSingle();
+  // Fetch seller email & name using service role (auth.admin requires it)
+  const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
 
-  const { data: authUser } = await supabase.auth.admin.getUserById(listing.owner_id);
+  const [{ data: profile }, { data: authUser }] = await Promise.all([
+    supabaseAdmin.from("user_profiles").select("display_name").eq("id", listing.owner_id).maybeSingle(),
+    supabaseAdmin.auth.admin.getUserById(listing.owner_id),
+  ]);
+
   const sellerEmail = authUser?.user?.email;
   const sellerName = profile?.display_name || sellerEmail?.split("@")[0] || "there";
 
